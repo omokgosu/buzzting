@@ -1,0 +1,136 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// Enums
+// ============================================
+
+enum UserRole {
+  user
+  admin
+}
+
+enum MatchRequestStatus {
+  pending
+  accepted
+  rejected
+  cancelled
+}
+
+enum MatchStatus {
+  active
+  completed
+  cancelled
+}
+
+enum ContactPreference {
+  email
+  kakao
+  phone
+}
+
+// ============================================
+// Models
+// ============================================
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  name          String
+  department    String?
+  emailVerified Boolean  @default(false) @map("email_verified")
+  role          UserRole @default(user)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  profiles           Profile[] @relation("UserProfiles")
+  registeredProfiles Profile[] @relation("RegisteredBy")
+
+  @@index([email])
+  @@index([createdAt])
+  @@map("users")
+}
+
+model Profile {
+  id                String             @id @default(uuid())
+  userId            String             @map("user_id")
+  registeredById    String             @map("registered_by")
+  name              String
+  age               Int?
+  bio               String?
+  department        String?
+  interests         String[]           @default([])
+  profileImageUrl   String?            @map("profile_image_url")
+  contactPreference ContactPreference? @map("contact_preference")
+  contactInfo       String?            @map("contact_info")
+  isActive          Boolean            @default(true) @map("is_active")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+
+  // Relations
+  user                  User           @relation("UserProfiles", fields: [userId], references: [id], onDelete: Cascade)
+  registeredBy          User           @relation("RegisteredBy", fields: [registeredById], references: [id], onDelete: Cascade)
+  matchRequestsSent     MatchRequest[] @relation("RequesterProfile")
+  matchRequestsReceived MatchRequest[] @relation("TargetProfile")
+  matchesAsProfile1     Match[]        @relation("Profile1")
+  matchesAsProfile2     Match[]        @relation("Profile2")
+
+  @@index([userId])
+  @@index([registeredById])
+  @@index([isActive])
+  @@index([createdAt])
+  @@map("profiles")
+}
+
+model MatchRequest {
+  id                 String             @id @default(uuid())
+  requesterProfileId String             @map("requester_profile_id")
+  targetProfileId    String             @map("target_profile_id")
+  status             MatchRequestStatus @default(pending)
+  message            String?
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+  respondedAt        DateTime?          @map("responded_at")
+
+  // Relations
+  requesterProfile Profile @relation("RequesterProfile", fields: [requesterProfileId], references: [id], onDelete: Cascade)
+  targetProfile    Profile @relation("TargetProfile", fields: [targetProfileId], references: [id], onDelete: Cascade)
+  match            Match?
+
+  @@unique([requesterProfileId, targetProfileId])
+  @@index([requesterProfileId])
+  @@index([targetProfileId])
+  @@index([status])
+  @@map("match_requests")
+}
+
+model Match {
+  id             String      @id @default(uuid())
+  matchRequestId String      @unique @map("match_request_id")
+  profile1Id     String      @map("profile1_id")
+  profile2Id     String      @map("profile2_id")
+  status         MatchStatus @default(active)
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  matchRequest MatchRequest @relation(fields: [matchRequestId], references: [id], onDelete: Cascade)
+  profile1     Profile      @relation("Profile1", fields: [profile1Id], references: [id], onDelete: Cascade)
+  profile2     Profile      @relation("Profile2", fields: [profile2Id], references: [id], onDelete: Cascade)
+
+  @@unique([profile1Id, profile2Id])
+  @@index([matchRequestId])
+  @@index([profile1Id])
+  @@index([profile2Id])
+  @@index([status])
+  @@map("matches")
+}
