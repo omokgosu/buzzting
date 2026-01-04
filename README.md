@@ -1,4 +1,6 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# buzzting
+
+사내 동료들과 함께하는 소개팅 웹사이트
 
 ## Getting Started
 

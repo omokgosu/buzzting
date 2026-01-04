@@ -1,63 +1,92 @@
-import Image from "next/image";
+import Link from "next/link";
+
+// 간단한 더미 데이터
+const participants = [
+  {
+    id: 1,
+    name: "김철수",
+    department: "개발팀",
+    age: 28,
+    bio: "프론트엔드 개발자입니다. 운동과 독서를 좋아해요!",
+    image: "👨‍💻",
+  },
+  {
+    id: 2,
+    name: "이영희",
+    department: "디자인팀",
+    age: 26,
+    bio: "UI/UX 디자이너입니다. 카페 탐방을 즐겨요.",
+    image: "👩‍🎨",
+  },
+  {
+    id: 3,
+    name: "박민수",
+    department: "기획팀",
+    age: 30,
+    bio: "프로덕트 기획자입니다. 여행과 사진을 좋아합니다.",
+    image: "👨‍💼",
+  },
+  {
+    id: 4,
+    name: "최지은",
+    department: "마케팅팀",
+    age: 27,
+    bio: "디지털 마케터입니다. 요리와 영화 감상을 좋아해요.",
+    image: "👩‍💼",
+  },
+  {
+    id: 5,
+    name: "정대현",
+    department: "개발팀",
+    age: 29,
+    bio: "백엔드 개발자입니다. 게임과 음악을 즐겨요.",
+    image: "👨‍💻",
+  },
+  {
+    id: 6,
+    name: "한소영",
+    department: "인사팀",
+    age: 25,
+    bio: "HR 담당자입니다. 독서와 요가를 좋아합니다.",
+    image: "👩‍💼",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <h1 className="text-4xl font-bold text-center text-pink-600">
+            Buzzting 💕
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-center text-gray-600 mt-2">
+            사내 동료들과 함께하는 소개팅
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {participants.map((participant) => (
+            <Link
+              key={participant.id}
+              href={`/profile/${participant.id}`}
+              className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6 flex flex-col items-center text-center"
+            >
+              <div className="text-6xl mb-4">{participant.image}</div>
+              <h2 className="text-xl font-bold text-gray-800 mb-1">
+                {participant.name}
+              </h2>
+              <p className="text-pink-600 font-semibold mb-1">
+                {participant.department}
+              </p>
+              <p className="text-sm text-gray-500 mb-3">{participant.age}세</p>
+              <p className="text-sm text-gray-600 line-clamp-2">
+                {participant.bio}
+              </p>
+            </Link>
+          ))}
         </div>
       </main>
     </div>
