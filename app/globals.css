@@ -1,26 +1,91 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* 따뜻한 브라운/베이지/아이보리 컬러 팔레트 */
+  --background: #FAF8F3;
+  --foreground: #5C4A37;
+  --brown-50: #F5E6D3;
+  --brown-100: #E8D5C4;
+  --brown-200: #D4C4B0;
+  --brown-300: #B8956A;
+  --brown-400: #A0826D;
+  --brown-500: #8B6F47;
+  --brown-600: #6B5638;
+  --brown-700: #4A3D28;
+  --ivory-50: #FFF8DC;
+  --ivory-100: #FAF0E6;
+  --ivory-200: #F5F5DC;
+  --beige-50: #F5E6D3;
+  --beige-100: #E8D5C4;
+  --beige-200: #D4C4B0;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-noto-sans-kr);
+  
+  /* 브라운 컬러 */
+  --color-brown-50: var(--brown-50);
+  --color-brown-100: var(--brown-100);
+  --color-brown-200: var(--brown-200);
+  --color-brown-300: var(--brown-300);
+  --color-brown-400: var(--brown-400);
+  --color-brown-500: var(--brown-500);
+  --color-brown-600: var(--brown-600);
+  --color-brown-700: var(--brown-700);
+  
+  /* 아이보리 컬러 */
+  --color-ivory-50: var(--ivory-50);
+  --color-ivory-100: var(--ivory-100);
+  --color-ivory-200: var(--ivory-200);
+  
+  /* 베이지 컬러 */
+  --color-beige-50: var(--beige-50);
+  --color-beige-100: var(--beige-100);
+  --color-beige-200: var(--beige-200);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-noto-sans-kr), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.mobile-container {
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--background);
+}
+
+/* 떠다니는 하트 애니메이션 */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(5deg); }
+}
+
+@keyframes float-medium {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(-5deg); }
+}
+
+@keyframes float-fast {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(3deg); }
+}
+
+.animate-float-slow {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+.animate-float-medium {
+  animation: float-medium 4s ease-in-out infinite;
+}
+
+.animate-float-fast {
+  animation: float-fast 3s ease-in-out infinite;
 }

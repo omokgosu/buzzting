@@ -30,38 +30,12 @@
 
 ### 인증 관련
 
-#### 1. 회원가입
-- **POST** `/api/auth/register`
+#### 1. 로그인
+- **POST** `/api/auth/login`
 - **요청 본문**:
   ```json
   {
-    "email": "user@buzzvil.com",
-    "name": "홍길동",
-    "department": "개발팀"
-  }
-  ```
-- **응답**:
-  ```json
-  {
-    "success": true,
-    "data": {
-      "message": "인증 코드가 이메일로 발송되었습니다."
-    }
-  }
-  ```
-- **에러 코드**:
-  - `INVALID_EMAIL_DOMAIN`: 버즈빌 이메일이 아님
-  - `EMAIL_ALREADY_EXISTS`: 이미 가입된 이메일
-
----
-
-#### 2. 이메일 인증 코드 검증
-- **POST** `/api/auth/verify-email`
-- **요청 본문**:
-  ```json
-  {
-    "email": "user@buzzvil.com",
-    "code": "123456"
+    "email": "user@buzzvil.com"
   }
   ```
 - **응답**:
@@ -72,32 +46,22 @@
       "user": {
         "id": "uuid",
         "email": "user@buzzvil.com",
-        "name": "홍길동"
+        "nickname": "홍길동",
+        "name": "홍길동",
+        "department": "개발팀"
       },
       "token": "jwt_token"
     }
   }
   ```
 - **에러 코드**:
-  - `INVALID_CODE`: 인증 코드가 일치하지 않음
-  - `CODE_EXPIRED`: 인증 코드 만료
+  - `VALIDATION_ERROR`: 이메일이 제공되지 않음
+  - `INVALID_EMAIL_DOMAIN`: 버즈빌 이메일이 아님
+  - `USER_NOT_FOUND`: 등록되지 않은 이메일
 
 ---
 
-#### 3. 로그인
-- **POST** `/api/auth/login`
-- **요청 본문**:
-  ```json
-  {
-    "email": "user@buzzvil.com",
-    "code": "123456"
-  }
-  ```
-- **응답**: 인증 코드 검증과 동일
-
----
-
-#### 4. 로그아웃
+#### 2. 로그아웃
 - **POST** `/api/auth/logout`
 - **인증**: 필요
 - **응답**:
@@ -109,7 +73,7 @@
 
 ---
 
-#### 5. 현재 사용자 정보 조회
+#### 3. 현재 사용자 정보 조회
 - **GET** `/api/auth/me`
 - **인증**: 필요
 - **응답**:
@@ -394,9 +358,7 @@
 - `NOT_FOUND`: 리소스를 찾을 수 없음
 - `VALIDATION_ERROR`: 입력값 검증 실패
 - `INVALID_EMAIL_DOMAIN`: 유효하지 않은 이메일 도메인
-- `EMAIL_ALREADY_EXISTS`: 이미 가입된 이메일
-- `INVALID_CODE`: 인증 코드 불일치
-- `CODE_EXPIRED`: 인증 코드 만료
+- `USER_NOT_FOUND`: 등록되지 않은 사용자
 - `ALREADY_HAS_ACTIVE_PROFILE`: 이미 활성 프로필 존재
 - `DUPLICATE_REQUEST`: 중복 신청
 - `SELF_REQUEST`: 본인에게 신청 불가

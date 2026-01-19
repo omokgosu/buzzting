@@ -22,6 +22,9 @@
 ### ⚙️ [기능 명세서 (Features)](./features.md)
 각 기능별 상세 명세 및 사용자 플로우
 
+### 🚀 [배포 가이드 (Deployment)](./deployment.md)
+Vercel 배포 및 환경 변수 설정 가이드
+
 ## 개발 순서 제안
 
 1. **데이터베이스 설정** ([database.md](./database.md) 참고)
@@ -34,8 +37,7 @@
 
 3. **인증 시스템 구현** ([authentication.md](./authentication.md) 참고)
    - 이메일 도메인 검증
-   - 인증 코드 발송 기능
-   - 세션 관리
+   - JWT 토큰 기반 세션 관리
 
 4. **API 구현** ([api-spec.md](./api-spec.md) 참고)
    - 인증 API

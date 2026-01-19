@@ -7,7 +7,11 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
+
+// Seed configuration
+// Run: npm run db:seed
 
 // ============================================
 // Enums
@@ -31,11 +35,6 @@ enum MatchStatus {
   cancelled
 }
 
-enum ContactPreference {
-  email
-  kakao
-  phone
-}
 
 // ============================================
 // Models
@@ -44,9 +43,10 @@ enum ContactPreference {
 model User {
   id            String   @id @default(uuid())
   email         String   @unique
-  name          String
+  nickname      String
+  name          String?
   department    String?
-  emailVerified Boolean  @default(false) @map("email_verified")
+  emailVerified Boolean  @default(true) @map("email_verified")
   role          UserRole @default(user)
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
@@ -61,17 +61,28 @@ model User {
 }
 
 model Profile {
-  id                String             @id @default(uuid())
-  userId            String             @map("user_id")
-  registeredById    String             @map("registered_by")
-  name              String
-  age               Int?
-  bio               String?
-  department        String?
-  interests         String[]           @default([])
-  profileImageUrl   String?            @map("profile_image_url")
-  contactPreference ContactPreference? @map("contact_preference")
-  contactInfo       String?            @map("contact_info")
+  id             String  @id @default(uuid())
+  userId         String  @map("user_id")
+  registeredById String  @map("registered_by")
+  nickname       String
+  character      String? // 캐릭터 아이콘 (fox, bear, wolf, rabbit, etc.)
+  birthYear      Int?    @map("birth_year")
+  bio            String? // 친구 소개글
+  height         Int?
+  mbti           String?
+  location       String?
+  job            String? // 직장/직업
+  smoking        String? // 비흡연/흡연/가끔
+  drinking       String? // 안마심/가끔/자주/소주1병 등
+
+  // 복수선택 필드들
+  interests     String[] @default([]) // 관심사
+  idealTypes    String[] @default([]) @map("ideal_types") // 이상형
+  dateStyles    String[] @default([]) @map("date_styles") // 데이트 스타일
+  datingStyles  String[] @default([]) @map("dating_styles") // 연애 스타일
+  contactStyles String[] @default([]) @map("contact_styles") // 연락 스타일
+
+  contactPreference String? @map("contact_preference") // 카카오톡/전화/인스타DM/직접만남
   isActive          Boolean            @default(true) @map("is_active")
   createdAt         DateTime           @default(now()) @map("created_at")
   updatedAt         DateTime           @updatedAt @map("updated_at")
