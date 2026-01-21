@@ -183,12 +183,16 @@ export default function Home() {
       </main>
 
       {/* 프로필 등록 플로팅 버튼 */}
-      <Link
-        href="/profiles/new"
-        className="fixed bottom-6 right-4 px-4 py-2.5 bg-[#C4956A] text-white text-sm font-medium rounded-full shadow-lg active:scale-95 transition-all"
-      >
-        + 프로필 등록
-      </Link>
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[500px] px-4 pointer-events-none">
+        <div className="flex justify-end pointer-events-auto">
+          <Link
+            href="/profiles/new"
+            className="px-4 py-2.5 bg-[#C4956A] text-white text-sm font-medium rounded-full shadow-lg active:scale-95 transition-all"
+          >
+            + 프로필 등록
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
