@@ -52,23 +52,12 @@ export const authApi = {
 };
 
 // 프로필 API
-export interface ProfileFilters {
-  minAge?: number;
-  maxAge?: number;
-  smoking?: string;
-}
-
 export const profileApi = {
-  list: async (page = 1, limit = 20, filters?: ProfileFilters) => {
+  list: async (page = 1, limit = 20) => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
     });
-    if (filters) {
-      if (filters.minAge) params.append("minAge", filters.minAge.toString());
-      if (filters.maxAge) params.append("maxAge", filters.maxAge.toString());
-      if (filters.smoking) params.append("smoking", filters.smoking);
-    }
     return apiRequest<{ profiles: any[]; pagination: any }>(`/profiles?${params}`);
   },
   get: async (id: string) => {
