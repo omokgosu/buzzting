@@ -94,6 +94,7 @@ export default function ProfileDetailPage() {
         setSelectedProfileId("");
         setRequestStep("select");
         alert("매칭 신청이 완료되었습니다!");
+        router.push("/home");
       } else {
         setError(response.error?.message || "매칭 신청에 실패했습니다.");
       }

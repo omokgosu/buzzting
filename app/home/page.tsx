@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { profileApi, authApi } from "@/lib/api-client";
+import { profileApi, authApi, ProfileFilters } from "@/lib/api-client";
 import { getToken, removeToken } from "@/lib/auth-client";
 import { getCharacterIcon } from "@/components/CharacterIcons";
 
@@ -13,6 +13,9 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [page, setPage] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<ProfileFilters>({});
+  const [tempFilters, setTempFilters] = useState<ProfileFilters>({});
 
   useEffect(() => {
     const token = getToken();
@@ -23,12 +26,12 @@ export default function Home() {
 
     loadProfiles();
     loadUser();
-  }, [page, router]);
+  }, [page, filters, router]);
 
   const loadProfiles = async () => {
     try {
       setLoading(true);
-      const response = await profileApi.list(page, 20);
+      const response = await profileApi.list(page, 20, filters);
       if (response.success && response.data) {
         setProfiles(response.data.profiles);
       }
@@ -38,6 +41,21 @@ export default function Home() {
       setLoading(false);
     }
   };
+
+  const applyFilters = () => {
+    setFilters(tempFilters);
+    setShowFilters(false);
+    setPage(1);
+  };
+
+  const resetFilters = () => {
+    setTempFilters({});
+    setFilters({});
+    setShowFilters(false);
+    setPage(1);
+  };
+
+  const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
   const loadUser = async () => {
     const token = getToken();
@@ -105,6 +123,166 @@ export default function Home() {
       </header>
 
       <main className="px-4 py-6">
+        {/* 필터 버튼 */}
+        <div className="mb-4">
+          <button
+            onClick={() => {
+              setTempFilters(filters);
+              setShowFilters(true);
+            }}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${
+              activeFilterCount > 0
+                ? "bg-[#C4956A] text-white"
+                : "bg-[#F5EDE5] text-[#8B7355]"
+            }`}
+          >
+            <span>필터</span>
+            {activeFilterCount > 0 && (
+              <span className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center text-xs">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* 필터 패널 */}
+        {showFilters && (
+          <div className="fixed inset-0 bg-black/50 z-30 flex items-end justify-center">
+            <div className="bg-white w-full max-w-lg rounded-t-2xl p-6 max-h-[80vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-[#5C4A37]">필터</h2>
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="text-[#A08060] text-xl"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* 나이 필터 */}
+                <div>
+                  <label className="block text-sm font-medium text-[#5C4A37] mb-2">나이</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      placeholder="최소"
+                      value={tempFilters.minAge || ""}
+                      onChange={(e) => setTempFilters({ ...tempFilters, minAge: e.target.value ? parseInt(e.target.value) : undefined })}
+                      className="flex-1 px-3 py-2 border border-[#E0D4C8] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]"
+                    />
+                    <span className="text-[#A08060]">~</span>
+                    <input
+                      type="number"
+                      placeholder="최대"
+                      value={tempFilters.maxAge || ""}
+                      onChange={(e) => setTempFilters({ ...tempFilters, maxAge: e.target.value ? parseInt(e.target.value) : undefined })}
+                      className="flex-1 px-3 py-2 border border-[#E0D4C8] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]"
+                    />
+                    <span className="text-[#A08060] text-sm">세</span>
+                  </div>
+                </div>
+
+                {/* 키 필터 */}
+                <div>
+                  <label className="block text-sm font-medium text-[#5C4A37] mb-2">키</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      placeholder="최소"
+                      value={tempFilters.minHeight || ""}
+                      onChange={(e) => setTempFilters({ ...tempFilters, minHeight: e.target.value ? parseInt(e.target.value) : undefined })}
+                      className="flex-1 px-3 py-2 border border-[#E0D4C8] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]"
+                    />
+                    <span className="text-[#A08060]">~</span>
+                    <input
+                      type="number"
+                      placeholder="최대"
+                      value={tempFilters.maxHeight || ""}
+                      onChange={(e) => setTempFilters({ ...tempFilters, maxHeight: e.target.value ? parseInt(e.target.value) : undefined })}
+                      className="flex-1 px-3 py-2 border border-[#E0D4C8] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]"
+                    />
+                    <span className="text-[#A08060] text-sm">cm</span>
+                  </div>
+                </div>
+
+                {/* MBTI 필터 */}
+                <div>
+                  <label className="block text-sm font-medium text-[#5C4A37] mb-2">MBTI</label>
+                  <select
+                    value={tempFilters.mbti || ""}
+                    onChange={(e) => setTempFilters({ ...tempFilters, mbti: e.target.value || undefined })}
+                    className="w-full px-3 py-2 border border-[#E0D4C8] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]"
+                  >
+                    <option value="">전체</option>
+                    {["INTJ", "INTP", "ENTJ", "ENTP", "INFJ", "INFP", "ENFJ", "ENFP", "ISTJ", "ISFJ", "ESTJ", "ESFJ", "ISTP", "ISFP", "ESTP", "ESFP"].map((mbti) => (
+                      <option key={mbti} value={mbti}>{mbti}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 흡연 필터 */}
+                <div>
+                  <label className="block text-sm font-medium text-[#5C4A37] mb-2">흡연</label>
+                  <select
+                    value={tempFilters.smoking || ""}
+                    onChange={(e) => setTempFilters({ ...tempFilters, smoking: e.target.value || undefined })}
+                    className="w-full px-3 py-2 border border-[#E0D4C8] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]"
+                  >
+                    <option value="">전체</option>
+                    <option value="비흡연">비흡연</option>
+                    <option value="흡연">흡연</option>
+                    <option value="가끔">가끔</option>
+                  </select>
+                </div>
+
+                {/* 음주 필터 */}
+                <div>
+                  <label className="block text-sm font-medium text-[#5C4A37] mb-2">음주</label>
+                  <select
+                    value={tempFilters.drinking || ""}
+                    onChange={(e) => setTempFilters({ ...tempFilters, drinking: e.target.value || undefined })}
+                    className="w-full px-3 py-2 border border-[#E0D4C8] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]"
+                  >
+                    <option value="">전체</option>
+                    <option value="안마심">안마심</option>
+                    <option value="가끔">가끔</option>
+                    <option value="자주">자주</option>
+                  </select>
+                </div>
+
+                {/* 지역 필터 */}
+                <div>
+                  <label className="block text-sm font-medium text-[#5C4A37] mb-2">지역</label>
+                  <input
+                    type="text"
+                    placeholder="예: 서울, 판교"
+                    value={tempFilters.location || ""}
+                    onChange={(e) => setTempFilters({ ...tempFilters, location: e.target.value || undefined })}
+                    className="w-full px-3 py-2 border border-[#E0D4C8] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]"
+                  />
+                </div>
+              </div>
+
+              {/* 버튼 */}
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={resetFilters}
+                  className="flex-1 py-3 rounded-xl text-[#8B7355] bg-[#F5EDE5] font-medium"
+                >
+                  초기화
+                </button>
+                <button
+                  onClick={applyFilters}
+                  className="flex-1 py-3 rounded-xl text-white bg-[#C4956A] font-medium"
+                >
+                  적용하기
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 프로필 목록 */}
         {loading ? (
           <div className="text-center py-12">

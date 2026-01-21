@@ -62,7 +62,36 @@ export async function POST(
       return { matchRequest: updatedRequest, match };
     });
 
-    return successResponse(result);
+    // 소개자 정보 조회
+    const requesterProfile = await prisma.profile.findUnique({
+      where: { id: matchRequest.requesterProfileId },
+      include: {
+        registeredBy: {
+          select: { nickname: true, email: true },
+        },
+        user: {
+          select: { nickname: true, email: true },
+        },
+      },
+    });
+
+    const targetProfile = await prisma.profile.findUnique({
+      where: { id: matchRequest.targetProfileId },
+      include: {
+        registeredBy: {
+          select: { nickname: true, email: true },
+        },
+        user: {
+          select: { nickname: true, email: true },
+        },
+      },
+    });
+
+    return successResponse({
+      ...result,
+      requesterProfile,
+      targetProfile,
+    });
   } catch (error) {
     console.error("Accept match request error:", error);
     return errorResponse("INTERNAL_ERROR", "서버 오류가 발생했습니다.", 500);

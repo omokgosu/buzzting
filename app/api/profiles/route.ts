@@ -10,13 +10,50 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "20");
     const department = searchParams.get("department");
 
+    // 필터 파라미터
+    const minAge = searchParams.get("minAge");
+    const maxAge = searchParams.get("maxAge");
+    const minHeight = searchParams.get("minHeight");
+    const maxHeight = searchParams.get("maxHeight");
+    const mbti = searchParams.get("mbti");
+    const smoking = searchParams.get("smoking");
+    const drinking = searchParams.get("drinking");
+    const location = searchParams.get("location");
+
     const skip = (page - 1) * limit;
+    const currentYear = new Date().getFullYear();
 
     // 필터 조건
-    const where = {
+    const where: any = {
       isActive: true,
       ...(department && { department }),
+      ...(mbti && { mbti }),
+      ...(smoking && { smoking }),
+      ...(drinking && { drinking }),
+      ...(location && { location }),
     };
+
+    // 나이 필터 (출생연도로 계산)
+    if (minAge || maxAge) {
+      where.birthYear = {};
+      if (minAge) {
+        where.birthYear.lte = currentYear - parseInt(minAge);
+      }
+      if (maxAge) {
+        where.birthYear.gte = currentYear - parseInt(maxAge);
+      }
+    }
+
+    // 키 필터
+    if (minHeight || maxHeight) {
+      where.height = {};
+      if (minHeight) {
+        where.height.gte = parseInt(minHeight);
+      }
+      if (maxHeight) {
+        where.height.lte = parseInt(maxHeight);
+      }
+    }
 
     // 프로필 목록 조회
     const [profiles, total] = await Promise.all([

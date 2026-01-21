@@ -24,12 +24,23 @@ export async function GET(request: NextRequest) {
       return successResponse({ matches: [] });
     }
 
-    // 사용자의 매칭 조회 (profile1 또는 profile2로 참여한 매칭)
+    // 내가 등록한 프로필들 조회
+    const myProfiles = await prisma.profile.findMany({
+      where: {
+        registeredById: authUser.userId,
+        isActive: true,
+      },
+      select: { id: true },
+    });
+
+    const myProfileIds = myProfiles.map((p) => p.id);
+
+    // 내가 등록한 프로필이 참여한 매칭 조회
     const matches = await prisma.match.findMany({
       where: {
         OR: [
-          { profile1Id: userProfile.id },
-          { profile2Id: userProfile.id },
+          { profile1Id: { in: myProfileIds } },
+          { profile2Id: { in: myProfileIds } },
         ],
       },
       include: {
@@ -37,12 +48,26 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             nickname: true,
+            character: true,
+            registeredBy: {
+              select: { nickname: true, email: true },
+            },
+            user: {
+              select: { nickname: true, email: true },
+            },
           },
         },
         profile2: {
           select: {
             id: true,
             nickname: true,
+            character: true,
+            registeredBy: {
+              select: { nickname: true, email: true },
+            },
+            user: {
+              select: { nickname: true, email: true },
+            },
           },
         },
         matchRequest: {

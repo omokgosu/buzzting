@@ -7,7 +7,7 @@ import { myApi, matchApi } from "@/lib/api-client";
 import { getToken } from "@/lib/auth-client";
 import { getCharacterIcon } from "@/components/CharacterIcons";
 
-type Tab = "profiles" | "received" | "sent";
+type Tab = "profiles" | "received" | "sent" | "matches";
 
 export default function MyPage() {
   const router = useRouter();
@@ -15,6 +15,7 @@ export default function MyPage() {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [receivedRequests, setReceivedRequests] = useState<any[]>([]);
   const [sentRequests, setSentRequests] = useState<any[]>([]);
+  const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
 
@@ -31,10 +32,11 @@ export default function MyPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [profilesRes, receivedRes, sentRes] = await Promise.all([
+      const [profilesRes, receivedRes, sentRes, matchesRes] = await Promise.all([
         myApi.profiles(),
         matchApi.list("received"),
         matchApi.list("sent"),
+        matchApi.matches(),
       ]);
 
       if (profilesRes.success && profilesRes.data) {
@@ -45,6 +47,9 @@ export default function MyPage() {
       }
       if (sentRes.success && sentRes.data) {
         setSentRequests(sentRes.data.requests);
+      }
+      if (matchesRes.success && matchesRes.data) {
+        setMatches(matchesRes.data.matches);
       }
     } catch (error) {
       console.error("Failed to load data:", error);
@@ -59,8 +64,21 @@ export default function MyPage() {
     setProcessing(requestId);
     try {
       const response = await matchApi.accept(requestId);
-      if (response.success) {
-        alert("매칭이 성사되었습니다!");
+      if (response.success && response.data) {
+        const { requesterProfile, targetProfile } = response.data;
+        const requesterIntroducer = requesterProfile?.registeredBy?.nickname || "알 수 없음";
+        const targetIntroducer = targetProfile?.registeredBy?.nickname || "알 수 없음";
+        const requesterName = requesterProfile?.nickname || "상대방";
+        const targetName = targetProfile?.nickname || "내 친구";
+
+        alert(
+          `🎉 매칭이 성사되었습니다!\n\n` +
+          `${requesterName} ↔ ${targetName}\n\n` +
+          `📢 소개해주신 분들:\n` +
+          `• ${requesterName}: ${requesterIntroducer}님이 소개\n` +
+          `• ${targetName}: ${targetIntroducer}님이 소개\n\n` +
+          `💬 Slack으로 서로 연락해보세요!`
+        );
         loadData();
       } else {
         alert(response.error?.message || "승인에 실패했습니다.");
@@ -150,20 +168,30 @@ export default function MyPage() {
         <h1 className="text-xl font-bold text-[#5C4A37] mb-4">마이페이지</h1>
 
         {/* 탭 메뉴 */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-6 overflow-x-auto">
           <button
             onClick={() => setActiveTab("profiles")}
-            className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
+            className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === "profiles"
                 ? "bg-[#C4956A] text-white"
                 : "bg-[#F5EDE5] text-[#8B7355]"
             }`}
           >
-            내 프로필 ({profiles.length})
+            프로필 ({profiles.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("matches")}
+            className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all relative whitespace-nowrap ${
+              activeTab === "matches"
+                ? "bg-[#C4956A] text-white"
+                : "bg-[#F5EDE5] text-[#8B7355]"
+            }`}
+          >
+            성사됨 ({matches.length})
           </button>
           <button
             onClick={() => setActiveTab("received")}
-            className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all relative ${
+            className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all relative whitespace-nowrap ${
               activeTab === "received"
                 ? "bg-[#C4956A] text-white"
                 : "bg-[#F5EDE5] text-[#8B7355]"
@@ -178,7 +206,7 @@ export default function MyPage() {
           </button>
           <button
             onClick={() => setActiveTab("sent")}
-            className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
+            className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === "sent"
                 ? "bg-[#C4956A] text-white"
                 : "bg-[#F5EDE5] text-[#8B7355]"
@@ -239,6 +267,69 @@ export default function MyPage() {
                   + 친구 추가로 소개하기
                 </Link>
               </>
+            )}
+          </div>
+        )}
+
+        {/* 성사된 매칭 탭 */}
+        {activeTab === "matches" && (
+          <div className="space-y-3">
+            {matches.length === 0 ? (
+              <div className="bg-white rounded-2xl p-6 text-center">
+                <p className="text-[#A08060]">아직 성사된 매칭이 없어요</p>
+              </div>
+            ) : (
+              matches.map((match) => {
+                const Profile1Icon = getCharacterIcon(match.profile1?.character);
+                const Profile2Icon = getCharacterIcon(match.profile2?.character);
+                return (
+                  <div
+                    key={match.id}
+                    className="bg-white rounded-2xl p-4 border border-[#E8DDD4]"
+                  >
+                    {/* 매칭 정보 */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="flex items-center gap-2 flex-1">
+                        <div className="w-10 h-10 rounded-lg bg-[#F5EDE5] flex items-center justify-center">
+                          {Profile1Icon ? <Profile1Icon size={24} /> : <span className="text-sm text-[#C4956A]">{match.profile1?.nickname?.charAt(0)}</span>}
+                        </div>
+                        <div>
+                          <p className="font-medium text-[#5C4A37] text-sm">{match.profile1?.nickname}</p>
+                          <p className="text-xs text-[#A08060]">{match.profile1?.registeredBy?.nickname}님이 소개</p>
+                        </div>
+                      </div>
+                      <span className="text-pink-500 text-lg">💕</span>
+                      <div className="flex items-center gap-2 flex-1">
+                        <div className="w-10 h-10 rounded-lg bg-[#F5EDE5] flex items-center justify-center">
+                          {Profile2Icon ? <Profile2Icon size={24} /> : <span className="text-sm text-[#C4956A]">{match.profile2?.nickname?.charAt(0)}</span>}
+                        </div>
+                        <div>
+                          <p className="font-medium text-[#5C4A37] text-sm">{match.profile2?.nickname}</p>
+                          <p className="text-xs text-[#A08060]">{match.profile2?.registeredBy?.nickname}님이 소개</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Slack 연락 안내 */}
+                    <div className="bg-[#F5EDE5] rounded-lg p-3">
+                      <p className="text-sm text-[#5C4A37] font-medium mb-1">💬 Slack으로 연락해보세요!</p>
+                      <p className="text-xs text-[#8B7355]">
+                        {match.profile1?.user?.email && (
+                          <span className="block">• {match.profile1?.nickname}: {match.profile1?.user?.email?.split("@")[0]}</span>
+                        )}
+                        {match.profile2?.user?.email && (
+                          <span className="block">• {match.profile2?.nickname}: {match.profile2?.user?.email?.split("@")[0]}</span>
+                        )}
+                      </p>
+                    </div>
+
+                    {/* 성사 날짜 */}
+                    <p className="text-xs text-[#A08060] mt-2 text-right">
+                      {new Date(match.createdAt).toLocaleDateString("ko-KR")} 성사
+                    </p>
+                  </div>
+                );
+              })
             )}
           </div>
         )}

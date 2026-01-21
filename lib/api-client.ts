@@ -52,13 +52,35 @@ export const authApi = {
 };
 
 // 프로필 API
+export interface ProfileFilters {
+  minAge?: number;
+  maxAge?: number;
+  minHeight?: number;
+  maxHeight?: number;
+  mbti?: string;
+  smoking?: string;
+  drinking?: string;
+  location?: string;
+  department?: string;
+}
+
 export const profileApi = {
-  list: async (page = 1, limit = 20, department?: string) => {
+  list: async (page = 1, limit = 20, filters?: ProfileFilters) => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
-      ...(department && { department }),
     });
+    if (filters) {
+      if (filters.department) params.append("department", filters.department);
+      if (filters.minAge) params.append("minAge", filters.minAge.toString());
+      if (filters.maxAge) params.append("maxAge", filters.maxAge.toString());
+      if (filters.minHeight) params.append("minHeight", filters.minHeight.toString());
+      if (filters.maxHeight) params.append("maxHeight", filters.maxHeight.toString());
+      if (filters.mbti) params.append("mbti", filters.mbti);
+      if (filters.smoking) params.append("smoking", filters.smoking);
+      if (filters.drinking) params.append("drinking", filters.drinking);
+      if (filters.location) params.append("location", filters.location);
+    }
     return apiRequest<{ profiles: any[]; pagination: any }>(`/profiles?${params}`);
   },
   get: async (id: string) => {
