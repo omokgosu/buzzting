@@ -183,44 +183,6 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* 키 필터 */}
-                <div>
-                  <label className="block text-sm font-medium text-[#5C4A37] mb-2">키</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      placeholder="최소"
-                      value={tempFilters.minHeight || ""}
-                      onChange={(e) => setTempFilters({ ...tempFilters, minHeight: e.target.value ? parseInt(e.target.value) : undefined })}
-                      className="flex-1 px-3 py-2 border border-[#E0D4C8] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]"
-                    />
-                    <span className="text-[#A08060]">~</span>
-                    <input
-                      type="number"
-                      placeholder="최대"
-                      value={tempFilters.maxHeight || ""}
-                      onChange={(e) => setTempFilters({ ...tempFilters, maxHeight: e.target.value ? parseInt(e.target.value) : undefined })}
-                      className="flex-1 px-3 py-2 border border-[#E0D4C8] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]"
-                    />
-                    <span className="text-[#A08060] text-sm">cm</span>
-                  </div>
-                </div>
-
-                {/* MBTI 필터 */}
-                <div>
-                  <label className="block text-sm font-medium text-[#5C4A37] mb-2">MBTI</label>
-                  <select
-                    value={tempFilters.mbti || ""}
-                    onChange={(e) => setTempFilters({ ...tempFilters, mbti: e.target.value || undefined })}
-                    className="w-full px-3 py-2 border border-[#E0D4C8] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]"
-                  >
-                    <option value="">전체</option>
-                    {["INTJ", "INTP", "ENTJ", "ENTP", "INFJ", "INFP", "ENFJ", "ENFP", "ISTJ", "ISFJ", "ESTJ", "ESFJ", "ISTP", "ISFP", "ESTP", "ESFP"].map((mbti) => (
-                      <option key={mbti} value={mbti}>{mbti}</option>
-                    ))}
-                  </select>
-                </div>
-
                 {/* 흡연 필터 */}
                 <div>
                   <label className="block text-sm font-medium text-[#5C4A37] mb-2">흡연</label>
@@ -234,33 +196,6 @@ export default function Home() {
                     <option value="흡연">흡연</option>
                     <option value="가끔">가끔</option>
                   </select>
-                </div>
-
-                {/* 음주 필터 */}
-                <div>
-                  <label className="block text-sm font-medium text-[#5C4A37] mb-2">음주</label>
-                  <select
-                    value={tempFilters.drinking || ""}
-                    onChange={(e) => setTempFilters({ ...tempFilters, drinking: e.target.value || undefined })}
-                    className="w-full px-3 py-2 border border-[#E0D4C8] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]"
-                  >
-                    <option value="">전체</option>
-                    <option value="안마심">안마심</option>
-                    <option value="가끔">가끔</option>
-                    <option value="자주">자주</option>
-                  </select>
-                </div>
-
-                {/* 지역 필터 */}
-                <div>
-                  <label className="block text-sm font-medium text-[#5C4A37] mb-2">지역</label>
-                  <input
-                    type="text"
-                    placeholder="예: 서울, 판교"
-                    value={tempFilters.location || ""}
-                    onChange={(e) => setTempFilters({ ...tempFilters, location: e.target.value || undefined })}
-                    className="w-full px-3 py-2 border border-[#E0D4C8] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C4956A]"
-                  />
                 </div>
               </div>
 
