@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import html2canvas from "html2canvas";
 import { profileApi, matchApi, authApi, myApi } from "@/lib/api-client";
 import { getToken } from "@/lib/auth-client";
 import { getCharacterIcon } from "@/components/CharacterIcons";
@@ -22,6 +23,8 @@ export default function ProfileDetailPage() {
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [requestStep, setRequestStep] = useState<"select" | "message">("select");
   const [error, setError] = useState("");
+  const [downloading, setDownloading] = useState(false);
+  const profileCardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const token = getToken();
@@ -126,6 +129,29 @@ export default function ProfileDetailPage() {
     }
   };
 
+  const handleDownloadImage = async () => {
+    if (!profileCardRef.current) return;
+
+    setDownloading(true);
+    try {
+      const canvas = await html2canvas(profileCardRef.current, {
+        backgroundColor: "#FAF8F3",
+        scale: 2,
+        useCORS: true,
+      });
+
+      const link = document.createElement("a");
+      link.download = `buzzting-${profile.nickname}-profile.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } catch (error) {
+      console.error("Failed to download image:", error);
+      alert("이미지 다운로드에 실패했습니다.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FAF8F3] flex items-center justify-center">
@@ -163,7 +189,21 @@ export default function ProfileDetailPage() {
       </header>
 
       <main className="px-4 py-6 pb-24">
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-[#E8DDD4]">
+        {/* 이미지 다운로드 안내 */}
+        <div className="mb-4 p-4 bg-[#FFF8F0] rounded-xl border border-[#E8DDD4] flex items-center justify-between gap-3">
+          <p className="text-sm text-[#8B7355]">
+            📸 프로필을 이미지로 저장해서 친구에게 전해주세요!
+          </p>
+          <button
+            onClick={handleDownloadImage}
+            disabled={downloading}
+            className="px-4 py-2 text-sm rounded-lg bg-[#C4956A] text-white font-medium whitespace-nowrap active:scale-95 transition-all disabled:opacity-50"
+          >
+            {downloading ? "저장 중..." : "저장하기"}
+          </button>
+        </div>
+
+        <div ref={profileCardRef} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-[#E8DDD4]">
           {/* 캐릭터 & 닉네임 */}
           <div className="flex items-center gap-4 mb-6">
             <div className="w-20 h-20 rounded-2xl bg-[#F5EDE5] flex items-center justify-center flex-shrink-0">
