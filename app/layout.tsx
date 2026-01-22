@@ -10,8 +10,29 @@ const notoSansKR = Noto_Sans_KR({
 });
 
 export const metadata: Metadata = {
-  title: "Buzzting - 사내소개팅",
-  description: "사내 동료들과 함께하는 소개팅 플랫폼",
+  title: "Buzzting - 버즈빌 사내소개팅",
+  description: "버즈빌 동료들이 소개해주는 친구 소개팅 플랫폼",
+  keywords: ["버즈빌", "소개팅", "사내소개팅", "buzzting", "buzzvil"],
+  authors: [{ name: "Buzzvil" }],
+  openGraph: {
+    title: "Buzzting - 버즈빌 사내소개팅",
+    description: "버즈빌 동료들이 소개해주는 친구 소개팅 플랫폼",
+    type: "website",
+    locale: "ko_KR",
+    siteName: "Buzzting",
+  },
+  twitter: {
+    card: "summary",
+    title: "Buzzting - 버즈빌 사내소개팅",
+    description: "버즈빌 동료들이 소개해주는 친구 소개팅 플랫폼",
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
+  themeColor: "#C4956A",
 };
 
 export default function RootLayout({
