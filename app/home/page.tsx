@@ -147,6 +147,11 @@ export default function Home() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h2 className="text-lg font-bold text-[#5C4A37]">{profile.nickname}</h2>
+                      {profile.gender && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-[#F5EDE5] text-[#8B7355]">
+                          {profile.gender === "male" ? "남" : "여"}
+                        </span>
+                      )}
                       {profile.mbti && (
                         <span className="text-xs px-2 py-0.5 bg-[#F5EDE5] text-[#C4956A] rounded-full">
                           {profile.mbti}
