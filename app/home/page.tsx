@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getToken, removeToken } from "@/lib/auth-client";
 import { getCharacterIcon } from "@/components/CharacterIcons";
-import { useUser, useProfiles, useLogout } from "@/hooks/use-api";
+import { useUser, useProfiles, useLogout, usePrefetchProfile } from "@/hooks/use-api";
 
 export default function Home() {
   const router = useRouter();
@@ -14,6 +14,7 @@ export default function Home() {
   const { data: user, isLoading: userLoading, error: userError } = useUser();
   const { data: profilesData, isLoading: profilesLoading } = useProfiles(1, genderFilter || undefined);
   const logoutMutation = useLogout();
+  const prefetchProfile = usePrefetchProfile();
 
   useEffect(() => {
     const token = getToken();
@@ -126,6 +127,8 @@ export default function Home() {
                 key={profile.id}
                 href={`/profile/${profile.id}`}
                 className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md border border-[#E8DDD4] p-4 active:scale-[0.98] transition-all"
+                onMouseEnter={() => prefetchProfile(profile.id)}
+                onTouchStart={() => prefetchProfile(profile.id)}
               >
                 <div className="flex gap-4">
                   {/* 프로필 아바타 */}

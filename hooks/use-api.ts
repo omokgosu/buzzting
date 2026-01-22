@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, QueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { authApi, profileApi, matchApi, myApi } from "@/lib/api-client";
 
 // Query Keys
@@ -273,4 +274,26 @@ export function useCancelMatch() {
       queryClient.invalidateQueries({ queryKey: ["matchRequests"] });
     },
   });
+}
+
+// Prefetch Hook
+export function usePrefetchProfile() {
+  const queryClient = useQueryClient();
+
+  return useCallback(
+    (id: string) => {
+      queryClient.prefetchQuery({
+        queryKey: queryKeys.profile(id),
+        queryFn: async () => {
+          const response = await profileApi.get(id);
+          if (!response.success || !response.data) {
+            throw new Error(response.error?.message || "Failed to fetch profile");
+          }
+          return response.data.profile;
+        },
+        staleTime: 1000 * 60 * 5, // 5분
+      });
+    },
+    [queryClient]
+  );
 }
