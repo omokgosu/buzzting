@@ -219,11 +219,7 @@ export default function ProfileDetailPage() {
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-bold text-[#5C4A37]">{profile.nickname}</h1>
                 {profile.gender && (
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    profile.gender === "male"
-                      ? "bg-blue-100 text-blue-600"
-                      : "bg-pink-100 text-pink-600"
-                  }`}>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#F5EDE5] text-[#8B7355]">
                     {profile.gender === "male" ? "남자" : "여자"}
                   </span>
                 )}
