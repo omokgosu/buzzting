@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
     const department = searchParams.get("department");
+    const gender = searchParams.get("gender");
 
     const skip = (page - 1) * limit;
 
@@ -16,10 +17,11 @@ export async function GET(request: NextRequest) {
     const where = {
       isActive: true,
       ...(department && { department }),
+      ...(gender && { gender }),
     };
 
     // 프로필 목록 조회
-    const [profiles, total] = await Promise.all([
+    const [profiles, total, maleCount, femaleCount] = await Promise.all([
       prisma.profile.findMany({
         where,
         skip,
@@ -29,6 +31,7 @@ export async function GET(request: NextRequest) {
           id: true,
           character: true,
           nickname: true,
+          gender: true,
           birthYear: true,
           bio: true,
           height: true,
@@ -46,6 +49,8 @@ export async function GET(request: NextRequest) {
         },
       }),
       prisma.profile.count({ where }),
+      prisma.profile.count({ where: { isActive: true, gender: "male" } }),
+      prisma.profile.count({ where: { isActive: true, gender: "female" } }),
     ]);
 
     const totalPages = Math.ceil(total / limit);
@@ -57,6 +62,11 @@ export async function GET(request: NextRequest) {
         limit,
         total,
         totalPages,
+      },
+      genderCounts: {
+        total: maleCount + femaleCount,
+        male: maleCount,
+        female: femaleCount,
       },
     });
   } catch (error) {
@@ -79,6 +89,7 @@ export async function POST(request: NextRequest) {
       userId,
       character,
       nickname,
+      gender,
       birthYear,
       bio,
       height,
@@ -134,6 +145,7 @@ export async function POST(request: NextRequest) {
         registeredById: authUser.userId,
         character: character || null,
         nickname,
+        gender: gender || null,
         birthYear: birthYear || null,
         bio: bio || null,
         height: height || null,

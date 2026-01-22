@@ -65,6 +65,7 @@ model Profile {
   userId         String  @map("user_id")
   registeredById String  @map("registered_by")
   nickname       String
+  gender         String? // 성별 (male, female)
   character      String? // 캐릭터 아이콘 (fox, bear, wolf, rabbit, etc.)
   birthYear      Int?    @map("birth_year")
   bio            String? // 친구 소개글

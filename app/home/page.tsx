@@ -13,6 +13,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [page, setPage] = useState(1);
+  const [genderFilter, setGenderFilter] = useState<string>("");
+  const [genderCounts, setGenderCounts] = useState<{ total: number; male: number; female: number }>({ total: 0, male: 0, female: 0 });
 
   useEffect(() => {
     const token = getToken();
@@ -23,14 +25,17 @@ export default function Home() {
 
     loadProfiles();
     loadUser();
-  }, [page, router]);
+  }, [page, genderFilter, router]);
 
   const loadProfiles = async () => {
     try {
       setLoading(true);
-      const response = await profileApi.list(page, 20);
+      const response = await profileApi.list(page, 20, genderFilter || undefined);
       if (response.success && response.data) {
         setProfiles(response.data.profiles);
+        if (response.data.genderCounts) {
+          setGenderCounts(response.data.genderCounts);
+        }
       }
     } catch (error) {
       console.error("Failed to load profiles:", error);
@@ -105,6 +110,40 @@ export default function Home() {
       </header>
 
       <main className="px-4 py-6">
+        {/* 성별 필터 */}
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setGenderFilter("")}
+            className={`px-4 py-2 text-sm rounded-full transition-all ${
+              genderFilter === ""
+                ? "bg-[#C4956A] text-white"
+                : "bg-[#F5EDE5] text-[#8B7355]"
+            }`}
+          >
+            전체 {genderCounts.total > 0 && `(${genderCounts.total})`}
+          </button>
+          <button
+            onClick={() => setGenderFilter("male")}
+            className={`px-4 py-2 text-sm rounded-full transition-all ${
+              genderFilter === "male"
+                ? "bg-[#C4956A] text-white"
+                : "bg-[#F5EDE5] text-[#8B7355]"
+            }`}
+          >
+            남자 {genderCounts.male > 0 && `(${genderCounts.male})`}
+          </button>
+          <button
+            onClick={() => setGenderFilter("female")}
+            className={`px-4 py-2 text-sm rounded-full transition-all ${
+              genderFilter === "female"
+                ? "bg-[#C4956A] text-white"
+                : "bg-[#F5EDE5] text-[#8B7355]"
+            }`}
+          >
+            여자 {genderCounts.female > 0 && `(${genderCounts.female})`}
+          </button>
+        </div>
+
         {/* 프로필 목록 */}
         {loading ? (
           <div className="text-center py-12">

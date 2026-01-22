@@ -53,12 +53,13 @@ export const authApi = {
 
 // 프로필 API
 export const profileApi = {
-  list: async (page = 1, limit = 20) => {
+  list: async (page = 1, limit = 20, gender?: string) => {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
     });
-    return apiRequest<{ profiles: any[]; pagination: any }>(`/profiles?${params}`);
+    if (gender) params.set("gender", gender);
+    return apiRequest<{ profiles: any[]; pagination: any; genderCounts: { total: number; male: number; female: number } }>(`/profiles?${params}`);
   },
   get: async (id: string) => {
     return apiRequest<{ profile: any }>(`/profiles/${id}`);

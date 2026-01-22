@@ -71,6 +71,7 @@ export default function NewProfilePage() {
   const [formData, setFormData] = useState({
     character: "",
     nickname: "",
+    gender: "",
     birthYear: "",
     bio: "",
     height: "",
@@ -143,6 +144,7 @@ export default function NewProfilePage() {
         userId: user.id,
         character: formData.character || undefined,
         nickname: formData.nickname,
+        gender: formData.gender || undefined,
         birthYear: formData.birthYear ? parseInt(formData.birthYear) : undefined,
         bio: formData.bio || undefined,
         height: formData.height ? parseInt(formData.height) : undefined,
@@ -255,6 +257,36 @@ export default function NewProfilePage() {
                   onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
                   placeholder="친구의 닉네임"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#8B7355] mb-2">
+                  성별 <span className="text-red-400">*</span>
+                </label>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, gender: "male" })}
+                    className={`flex-1 py-3 text-sm rounded-xl transition-all active:scale-95 ${
+                      formData.gender === "male"
+                        ? "bg-[#C4956A] text-white"
+                        : "bg-[#F5EDE5] text-[#8B7355]"
+                    }`}
+                  >
+                    남자
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, gender: "female" })}
+                    className={`flex-1 py-3 text-sm rounded-xl transition-all active:scale-95 ${
+                      formData.gender === "female"
+                        ? "bg-[#C4956A] text-white"
+                        : "bg-[#F5EDE5] text-[#8B7355]"
+                    }`}
+                  >
+                    여자
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

@@ -177,7 +177,18 @@ export default function ProfileDetailPage() {
               })()}
             </div>
             <div>
-              <h1 className="text-xl font-bold text-[#5C4A37]">{profile.nickname}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold text-[#5C4A37]">{profile.nickname}</h1>
+                {profile.gender && (
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                    profile.gender === "male"
+                      ? "bg-blue-100 text-blue-600"
+                      : "bg-pink-100 text-pink-600"
+                  }`}>
+                    {profile.gender === "male" ? "남자" : "여자"}
+                  </span>
+                )}
+              </div>
               <p className="text-sm text-[#A08060] mt-1">
                 {[
                   profile.birthYear && `${profile.birthYear}년생`,
@@ -200,6 +211,14 @@ export default function ProfileDetailPage() {
                 기본 정보
               </h2>
               <div className="grid grid-cols-2 gap-4">
+                {profile.gender && (
+                  <div>
+                    <p className="text-sm text-[#A08060] mb-1">성별</p>
+                    <p className="text-[#5C4A37] font-medium">
+                      {profile.gender === "male" ? "남자" : profile.gender === "female" ? "여자" : profile.gender}
+                    </p>
+                  </div>
+                )}
                 {profile.height && (
                   <div>
                     <p className="text-sm text-[#A08060] mb-1">키</p>
