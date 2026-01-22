@@ -20,6 +20,7 @@ export async function GET(
         registeredById: true,
         character: true,
         nickname: true,
+        gender: true,
         birthYear: true,
         bio: true,
         height: true,
@@ -90,6 +91,7 @@ export async function PUT(
     const {
       character,
       nickname,
+      gender,
       birthYear,
       bio,
       height,
@@ -111,6 +113,7 @@ export async function PUT(
       data: {
         ...(character !== undefined && { character }),
         ...(nickname !== undefined && { nickname }),
+        ...(gender !== undefined && { gender }),
         ...(birthYear !== undefined && { birthYear }),
         ...(bio !== undefined && { bio }),
         ...(height !== undefined && { height }),

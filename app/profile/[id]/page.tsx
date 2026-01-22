@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import html2canvas from "html2canvas";
+import { toPng } from "html-to-image";
 import { profileApi, matchApi, authApi, myApi } from "@/lib/api-client";
 import { getToken } from "@/lib/auth-client";
 import { getCharacterIcon } from "@/components/CharacterIcons";
@@ -134,15 +134,14 @@ export default function ProfileDetailPage() {
 
     setDownloading(true);
     try {
-      const canvas = await html2canvas(profileCardRef.current, {
+      const dataUrl = await toPng(profileCardRef.current, {
         backgroundColor: "#FAF8F3",
-        scale: 2,
-        useCORS: true,
+        pixelRatio: 2,
       });
 
       const link = document.createElement("a");
       link.download = `buzzting-${profile.nickname}-profile.png`;
-      link.href = canvas.toDataURL("image/png");
+      link.href = dataUrl;
       link.click();
     } catch (error) {
       console.error("Failed to download image:", error);
