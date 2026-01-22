@@ -3,69 +3,45 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { myApi, matchApi } from "@/lib/api-client";
 import { getToken } from "@/lib/auth-client";
 import { getCharacterIcon } from "@/components/CharacterIcons";
+import {
+  useMyProfiles,
+  useMatchRequests,
+  useMatches,
+  useAcceptMatch,
+  useRejectMatch,
+} from "@/hooks/use-api";
 
 type Tab = "profiles" | "received" | "sent" | "matches";
 
 export default function MyPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("profiles");
-  const [profiles, setProfiles] = useState<any[]>([]);
-  const [receivedRequests, setReceivedRequests] = useState<any[]>([]);
-  const [sentRequests, setSentRequests] = useState<any[]>([]);
-  const [matches, setMatches] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState<string | null>(null);
+
+  const { data: profiles = [], isLoading: profilesLoading } = useMyProfiles();
+  const { data: receivedRequests = [], isLoading: receivedLoading } = useMatchRequests("received");
+  const { data: sentRequests = [], isLoading: sentLoading } = useMatchRequests("sent");
+  const { data: matches = [], isLoading: matchesLoading } = useMatches();
+  const acceptMutation = useAcceptMatch();
+  const rejectMutation = useRejectMatch();
+
+  const loading = profilesLoading || receivedLoading || sentLoading || matchesLoading;
 
   useEffect(() => {
     const token = getToken();
     if (!token) {
       router.push("/auth/login");
-      return;
     }
-
-    loadData();
   }, [router]);
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const [profilesRes, receivedRes, sentRes, matchesRes] = await Promise.all([
-        myApi.profiles(),
-        matchApi.list("received"),
-        matchApi.list("sent"),
-        matchApi.matches(),
-      ]);
-
-      if (profilesRes.success && profilesRes.data) {
-        setProfiles(profilesRes.data.profiles);
-      }
-      if (receivedRes.success && receivedRes.data) {
-        setReceivedRequests(receivedRes.data.requests);
-      }
-      if (sentRes.success && sentRes.data) {
-        setSentRequests(sentRes.data.requests);
-      }
-      if (matchesRes.success && matchesRes.data) {
-        setMatches(matchesRes.data.matches);
-      }
-    } catch (error) {
-      console.error("Failed to load data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleAccept = async (requestId: string) => {
     if (!confirm("이 매칭 신청을 승인하시겠습니까?")) return;
 
-    setProcessing(requestId);
     try {
-      const response = await matchApi.accept(requestId);
-      if (response.success && response.data) {
-        const { requesterProfile, targetProfile } = response.data;
+      const data = await acceptMutation.mutateAsync(requestId);
+      if (data) {
+        const { requesterProfile, targetProfile } = data;
         const requesterIntroducer = requesterProfile?.registeredBy?.nickname || "알 수 없음";
         const targetIntroducer = targetProfile?.registeredBy?.nickname || "알 수 없음";
         const requesterName = requesterProfile?.nickname || "상대방";
@@ -73,39 +49,26 @@ export default function MyPage() {
 
         alert(
           `🎉 매칭이 성사되었습니다!\n\n` +
-          `${requesterName} ↔ ${targetName}\n\n` +
-          `📢 소개해주신 분들:\n` +
-          `• ${requesterName}: ${requesterIntroducer}님이 소개\n` +
-          `• ${targetName}: ${targetIntroducer}님이 소개\n\n` +
-          `💬 Slack으로 서로 연락해보세요!`
+            `${requesterName} ↔ ${targetName}\n\n` +
+            `📢 소개해주신 분들:\n` +
+            `• ${requesterName}: ${requesterIntroducer}님이 소개\n` +
+            `• ${targetName}: ${targetIntroducer}님이 소개\n\n` +
+            `💬 Slack으로 서로 연락해보세요!`
         );
-        loadData();
-      } else {
-        alert(response.error?.message || "승인에 실패했습니다.");
       }
-    } catch (error) {
-      alert("서버 오류가 발생했습니다.");
-    } finally {
-      setProcessing(null);
+    } catch (error: any) {
+      alert(error.message || "승인에 실패했습니다.");
     }
   };
 
   const handleReject = async (requestId: string) => {
     if (!confirm("이 매칭 신청을 반려하시겠습니까?")) return;
 
-    setProcessing(requestId);
     try {
-      const response = await matchApi.reject(requestId);
-      if (response.success) {
-        alert("매칭 신청을 반려했습니다.");
-        loadData();
-      } else {
-        alert(response.error?.message || "반려에 실패했습니다.");
-      }
-    } catch (error) {
-      alert("서버 오류가 발생했습니다.");
-    } finally {
-      setProcessing(null);
+      await rejectMutation.mutateAsync(requestId);
+      alert("매칭 신청을 반려했습니다.");
+    } catch (error: any) {
+      alert(error.message || "반려에 실패했습니다.");
     }
   };
 
@@ -140,6 +103,7 @@ export default function MyPage() {
   };
 
   const pendingReceivedCount = receivedRequests.filter((r) => r.status === "pending").length;
+  const processingId = acceptMutation.isPending || rejectMutation.isPending ? "processing" : null;
 
   if (loading) {
     return (
@@ -172,9 +136,7 @@ export default function MyPage() {
           <button
             onClick={() => setActiveTab("profiles")}
             className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
-              activeTab === "profiles"
-                ? "bg-[#C4956A] text-white"
-                : "bg-[#F5EDE5] text-[#8B7355]"
+              activeTab === "profiles" ? "bg-[#C4956A] text-white" : "bg-[#F5EDE5] text-[#8B7355]"
             }`}
           >
             프로필 ({profiles.length})
@@ -182,9 +144,7 @@ export default function MyPage() {
           <button
             onClick={() => setActiveTab("matches")}
             className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all relative whitespace-nowrap ${
-              activeTab === "matches"
-                ? "bg-[#C4956A] text-white"
-                : "bg-[#F5EDE5] text-[#8B7355]"
+              activeTab === "matches" ? "bg-[#C4956A] text-white" : "bg-[#F5EDE5] text-[#8B7355]"
             }`}
           >
             성사됨 ({matches.length})
@@ -192,9 +152,7 @@ export default function MyPage() {
           <button
             onClick={() => setActiveTab("received")}
             className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all relative whitespace-nowrap ${
-              activeTab === "received"
-                ? "bg-[#C4956A] text-white"
-                : "bg-[#F5EDE5] text-[#8B7355]"
+              activeTab === "received" ? "bg-[#C4956A] text-white" : "bg-[#F5EDE5] text-[#8B7355]"
             }`}
           >
             받은 신청
@@ -207,9 +165,7 @@ export default function MyPage() {
           <button
             onClick={() => setActiveTab("sent")}
             className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
-              activeTab === "sent"
-                ? "bg-[#C4956A] text-white"
-                : "bg-[#F5EDE5] text-[#8B7355]"
+              activeTab === "sent" ? "bg-[#C4956A] text-white" : "bg-[#F5EDE5] text-[#8B7355]"
             }`}
           >
             보낸 신청
@@ -283,15 +239,16 @@ export default function MyPage() {
                 const Profile1Icon = getCharacterIcon(match.profile1?.character);
                 const Profile2Icon = getCharacterIcon(match.profile2?.character);
                 return (
-                  <div
-                    key={match.id}
-                    className="bg-white rounded-2xl p-4 border border-[#E8DDD4]"
-                  >
+                  <div key={match.id} className="bg-white rounded-2xl p-4 border border-[#E8DDD4]">
                     {/* 매칭 정보 */}
                     <div className="flex items-center gap-2 mb-3">
                       <div className="flex items-center gap-2 flex-1">
                         <div className="w-10 h-10 rounded-lg bg-[#F5EDE5] flex items-center justify-center">
-                          {Profile1Icon ? <Profile1Icon size={24} /> : <span className="text-sm text-[#C4956A]">{match.profile1?.nickname?.charAt(0)}</span>}
+                          {Profile1Icon ? (
+                            <Profile1Icon size={24} />
+                          ) : (
+                            <span className="text-sm text-[#C4956A]">{match.profile1?.nickname?.charAt(0)}</span>
+                          )}
                         </div>
                         <div>
                           <p className="font-medium text-[#5C4A37] text-sm">{match.profile1?.nickname}</p>
@@ -301,7 +258,11 @@ export default function MyPage() {
                       <span className="text-pink-500 text-lg">💕</span>
                       <div className="flex items-center gap-2 flex-1">
                         <div className="w-10 h-10 rounded-lg bg-[#F5EDE5] flex items-center justify-center">
-                          {Profile2Icon ? <Profile2Icon size={24} /> : <span className="text-sm text-[#C4956A]">{match.profile2?.nickname?.charAt(0)}</span>}
+                          {Profile2Icon ? (
+                            <Profile2Icon size={24} />
+                          ) : (
+                            <span className="text-sm text-[#C4956A]">{match.profile2?.nickname?.charAt(0)}</span>
+                          )}
                         </div>
                         <div>
                           <p className="font-medium text-[#5C4A37] text-sm">{match.profile2?.nickname}</p>
@@ -315,10 +276,14 @@ export default function MyPage() {
                       <p className="text-sm text-[#5C4A37] font-medium mb-1">💬 Slack으로 연락해보세요!</p>
                       <p className="text-xs text-[#8B7355]">
                         {match.profile1?.user?.email && (
-                          <span className="block">• {match.profile1?.nickname}: {match.profile1?.user?.email?.split("@")[0]}</span>
+                          <span className="block">
+                            • {match.profile1?.nickname}: {match.profile1?.user?.email?.split("@")[0]}
+                          </span>
                         )}
                         {match.profile2?.user?.email && (
-                          <span className="block">• {match.profile2?.nickname}: {match.profile2?.user?.email?.split("@")[0]}</span>
+                          <span className="block">
+                            • {match.profile2?.nickname}: {match.profile2?.user?.email?.split("@")[0]}
+                          </span>
                         )}
                       </p>
                     </div>
@@ -346,25 +311,34 @@ export default function MyPage() {
                 const RequesterIcon = getCharacterIcon(request.requesterProfile?.character);
                 const TargetIcon = getCharacterIcon(request.targetProfile?.character);
                 return (
-                  <div
-                    key={request.id}
-                    className="bg-white rounded-2xl p-4 border border-[#E8DDD4]"
-                  >
+                  <div key={request.id} className="bg-white rounded-2xl p-4 border border-[#E8DDD4]">
                     {/* 신청 정보 */}
                     <div className="flex items-center gap-2 mb-3">
                       <div className="flex items-center gap-2 flex-1">
                         <div className="w-10 h-10 rounded-lg bg-[#F5EDE5] flex items-center justify-center">
-                          {RequesterIcon ? <RequesterIcon size={24} /> : <span className="text-sm text-[#C4956A]">{request.requesterProfile?.nickname?.charAt(0)}</span>}
+                          {RequesterIcon ? (
+                            <RequesterIcon size={24} />
+                          ) : (
+                            <span className="text-sm text-[#C4956A]">
+                              {request.requesterProfile?.nickname?.charAt(0)}
+                            </span>
+                          )}
                         </div>
                         <div>
                           <p className="font-medium text-[#5C4A37] text-sm">{request.requesterProfile?.nickname}</p>
-                          <p className="text-xs text-[#A08060]">{request.requesterProfile?.registeredBy?.nickname}님이 소개</p>
+                          <p className="text-xs text-[#A08060]">
+                            {request.requesterProfile?.registeredBy?.nickname}님이 소개
+                          </p>
                         </div>
                       </div>
                       <span className="text-[#C4956A]">→</span>
                       <div className="flex items-center gap-2 flex-1">
                         <div className="w-10 h-10 rounded-lg bg-[#F5EDE5] flex items-center justify-center">
-                          {TargetIcon ? <TargetIcon size={24} /> : <span className="text-sm text-[#C4956A]">{request.targetProfile?.nickname?.charAt(0)}</span>}
+                          {TargetIcon ? (
+                            <TargetIcon size={24} />
+                          ) : (
+                            <span className="text-sm text-[#C4956A]">{request.targetProfile?.nickname?.charAt(0)}</span>
+                          )}
                         </div>
                         <div>
                           <p className="font-medium text-[#5C4A37] text-sm">{request.targetProfile?.nickname}</p>
@@ -375,9 +349,7 @@ export default function MyPage() {
 
                     {/* 메시지 */}
                     {request.message && (
-                      <p className="text-sm text-[#8B7355] bg-[#FAF8F3] rounded-lg p-3 mb-3">
-                        "{request.message}"
-                      </p>
+                      <p className="text-sm text-[#8B7355] bg-[#FAF8F3] rounded-lg p-3 mb-3">"{request.message}"</p>
                     )}
 
                     {/* 상태 / 버튼 */}
@@ -385,21 +357,23 @@ export default function MyPage() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleAccept(request.id)}
-                          disabled={processing === request.id}
+                          disabled={!!processingId}
                           className="flex-1 py-2 rounded-xl bg-[#C4956A] text-white text-sm font-medium disabled:opacity-50"
                         >
                           승인
                         </button>
                         <button
                           onClick={() => handleReject(request.id)}
-                          disabled={processing === request.id}
+                          disabled={!!processingId}
                           className="flex-1 py-2 rounded-xl bg-[#F5EDE5] text-[#8B7355] text-sm font-medium disabled:opacity-50"
                         >
                           반려
                         </button>
                       </div>
                     ) : (
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}
+                      >
                         {getStatusText(request.status)}
                       </span>
                     )}
@@ -422,15 +396,18 @@ export default function MyPage() {
                 const RequesterIcon = getCharacterIcon(request.requesterProfile?.character);
                 const TargetIcon = getCharacterIcon(request.targetProfile?.character);
                 return (
-                  <div
-                    key={request.id}
-                    className="bg-white rounded-2xl p-4 border border-[#E8DDD4]"
-                  >
+                  <div key={request.id} className="bg-white rounded-2xl p-4 border border-[#E8DDD4]">
                     {/* 신청 정보 */}
                     <div className="flex items-center gap-2 mb-3">
                       <div className="flex items-center gap-2 flex-1">
                         <div className="w-10 h-10 rounded-lg bg-[#F5EDE5] flex items-center justify-center">
-                          {RequesterIcon ? <RequesterIcon size={24} /> : <span className="text-sm text-[#C4956A]">{request.requesterProfile?.nickname?.charAt(0)}</span>}
+                          {RequesterIcon ? (
+                            <RequesterIcon size={24} />
+                          ) : (
+                            <span className="text-sm text-[#C4956A]">
+                              {request.requesterProfile?.nickname?.charAt(0)}
+                            </span>
+                          )}
                         </div>
                         <div>
                           <p className="font-medium text-[#5C4A37] text-sm">{request.requesterProfile?.nickname}</p>
@@ -440,24 +417,30 @@ export default function MyPage() {
                       <span className="text-[#C4956A]">→</span>
                       <div className="flex items-center gap-2 flex-1">
                         <div className="w-10 h-10 rounded-lg bg-[#F5EDE5] flex items-center justify-center">
-                          {TargetIcon ? <TargetIcon size={24} /> : <span className="text-sm text-[#C4956A]">{request.targetProfile?.nickname?.charAt(0)}</span>}
+                          {TargetIcon ? (
+                            <TargetIcon size={24} />
+                          ) : (
+                            <span className="text-sm text-[#C4956A]">{request.targetProfile?.nickname?.charAt(0)}</span>
+                          )}
                         </div>
                         <div>
                           <p className="font-medium text-[#5C4A37] text-sm">{request.targetProfile?.nickname}</p>
-                          <p className="text-xs text-[#A08060]">{request.targetProfile?.registeredBy?.nickname}님이 소개</p>
+                          <p className="text-xs text-[#A08060]">
+                            {request.targetProfile?.registeredBy?.nickname}님이 소개
+                          </p>
                         </div>
                       </div>
                     </div>
 
                     {/* 메시지 */}
                     {request.message && (
-                      <p className="text-sm text-[#8B7355] bg-[#FAF8F3] rounded-lg p-3 mb-3">
-                        "{request.message}"
-                      </p>
+                      <p className="text-sm text-[#8B7355] bg-[#FAF8F3] rounded-lg p-3 mb-3">"{request.message}"</p>
                     )}
 
                     {/* 상태 */}
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
+                    <span
+                      className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}
+                    >
                       {getStatusText(request.status)}
                     </span>
                   </div>

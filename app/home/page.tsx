@@ -3,18 +3,17 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { profileApi, authApi } from "@/lib/api-client";
 import { getToken, removeToken } from "@/lib/auth-client";
 import { getCharacterIcon } from "@/components/CharacterIcons";
+import { useUser, useProfiles, useLogout } from "@/hooks/use-api";
 
 export default function Home() {
   const router = useRouter();
-  const [profiles, setProfiles] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
-  const [page, setPage] = useState(1);
   const [genderFilter, setGenderFilter] = useState<string>("");
-  const [genderCounts, setGenderCounts] = useState<{ total: number; male: number; female: number }>({ total: 0, male: 0, female: 0 });
+
+  const { data: user, isLoading: userLoading, error: userError } = useUser();
+  const { data: profilesData, isLoading: profilesLoading } = useProfiles(1, genderFilter || undefined);
+  const logoutMutation = useLogout();
 
   useEffect(() => {
     const token = getToken();
@@ -22,46 +21,18 @@ export default function Home() {
       router.push("/auth/login");
       return;
     }
+  }, [router]);
 
-    loadProfiles();
-    loadUser();
-  }, [page, genderFilter, router]);
-
-  const loadProfiles = async () => {
-    try {
-      setLoading(true);
-      const response = await profileApi.list(page, 20, genderFilter || undefined);
-      if (response.success && response.data) {
-        setProfiles(response.data.profiles);
-        if (response.data.genderCounts) {
-          setGenderCounts(response.data.genderCounts);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to load profiles:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadUser = async () => {
-    const token = getToken();
-    if (!token) return;
-
-    try {
-      const response = await authApi.me();
-      if (response.success && response.data) {
-        setUser(response.data.user);
-      }
-    } catch (error) {
+  useEffect(() => {
+    if (userError) {
       removeToken();
       router.push("/auth/login");
     }
-  };
+  }, [userError, router]);
 
   const handleLogout = async () => {
     try {
-      await authApi.logout();
+      await logoutMutation.mutateAsync();
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
@@ -69,6 +40,10 @@ export default function Home() {
       router.push("/auth/login");
     }
   };
+
+  const profiles = profilesData?.profiles || [];
+  const genderCounts = profilesData?.genderCounts || { total: 0, male: 0, female: 0 };
+  const loading = userLoading || profilesLoading;
 
   return (
     <div className="min-h-screen bg-[#FAF8F3]">
@@ -97,10 +72,7 @@ export default function Home() {
                   </button>
                 </>
               ) : (
-                <Link
-                  href="/auth/login"
-                  className="text-[#C4956A] font-medium"
-                >
+                <Link href="/auth/login" className="text-[#C4956A] font-medium">
                   로그인
                 </Link>
               )}
@@ -115,9 +87,7 @@ export default function Home() {
           <button
             onClick={() => setGenderFilter("")}
             className={`px-4 py-2 text-sm rounded-full transition-all ${
-              genderFilter === ""
-                ? "bg-[#C4956A] text-white"
-                : "bg-[#F5EDE5] text-[#8B7355]"
+              genderFilter === "" ? "bg-[#C4956A] text-white" : "bg-[#F5EDE5] text-[#8B7355]"
             }`}
           >
             전체 {genderCounts.total > 0 && `(${genderCounts.total})`}
@@ -125,9 +95,7 @@ export default function Home() {
           <button
             onClick={() => setGenderFilter("male")}
             className={`px-4 py-2 text-sm rounded-full transition-all ${
-              genderFilter === "male"
-                ? "bg-[#C4956A] text-white"
-                : "bg-[#F5EDE5] text-[#8B7355]"
+              genderFilter === "male" ? "bg-[#C4956A] text-white" : "bg-[#F5EDE5] text-[#8B7355]"
             }`}
           >
             남자 {genderCounts.male > 0 && `(${genderCounts.male})`}
@@ -135,9 +103,7 @@ export default function Home() {
           <button
             onClick={() => setGenderFilter("female")}
             className={`px-4 py-2 text-sm rounded-full transition-all ${
-              genderFilter === "female"
-                ? "bg-[#C4956A] text-white"
-                : "bg-[#F5EDE5] text-[#8B7355]"
+              genderFilter === "female" ? "bg-[#C4956A] text-white" : "bg-[#F5EDE5] text-[#8B7355]"
             }`}
           >
             여자 {genderCounts.female > 0 && `(${genderCounts.female})`}
@@ -192,24 +158,17 @@ export default function Home() {
                       {profile.job && <span>· {profile.job}</span>}
                     </div>
 
-                    {profile.bio && (
-                      <p className="text-xs text-[#8B7355] line-clamp-2 mb-2">{profile.bio}</p>
-                    )}
+                    {profile.bio && <p className="text-xs text-[#8B7355] line-clamp-2 mb-2">{profile.bio}</p>}
 
                     {profile.interests && profile.interests.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {profile.interests.slice(0, 4).map((interest: string, idx: number) => (
-                          <span
-                            key={idx}
-                            className="px-2 py-0.5 bg-[#F5EDE5] text-[#C4956A] text-xs rounded-full"
-                          >
+                          <span key={idx} className="px-2 py-0.5 bg-[#F5EDE5] text-[#C4956A] text-xs rounded-full">
                             {interest}
                           </span>
                         ))}
                         {profile.interests.length > 4 && (
-                          <span className="px-2 py-0.5 text-[#A08060] text-xs">
-                            +{profile.interests.length - 4}
-                          </span>
+                          <span className="px-2 py-0.5 text-[#A08060] text-xs">+{profile.interests.length - 4}</span>
                         )}
                       </div>
                     )}

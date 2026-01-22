@@ -4,20 +4,21 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { toPng } from "html-to-image";
-import { profileApi, matchApi, authApi, myApi } from "@/lib/api-client";
 import { getToken } from "@/lib/auth-client";
 import { getCharacterIcon } from "@/components/CharacterIcons";
+import {
+  useUser,
+  useProfile,
+  useMyProfiles,
+  useRequestMatch,
+  useDeleteProfile,
+} from "@/hooks/use-api";
 
 export default function ProfileDetailPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  const [profile, setProfile] = useState<any>(null);
-  const [user, setUser] = useState<any>(null);
-  const [myProfiles, setMyProfiles] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [requesting, setRequesting] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+
   const [message, setMessage] = useState("");
   const [selectedProfileId, setSelectedProfileId] = useState("");
   const [showRequestForm, setShowRequestForm] = useState(false);
@@ -26,57 +27,18 @@ export default function ProfileDetailPage() {
   const [downloading, setDownloading] = useState(false);
   const profileCardRef = useRef<HTMLDivElement>(null);
 
+  const { data: user } = useUser();
+  const { data: profile, isLoading: profileLoading } = useProfile(id);
+  const { data: myProfiles = [] } = useMyProfiles();
+  const requestMatchMutation = useRequestMatch();
+  const deleteProfileMutation = useDeleteProfile();
+
   useEffect(() => {
     const token = getToken();
     if (!token) {
       router.push("/auth/login");
-      return;
     }
-
-    loadProfile();
-    loadUser();
-    loadMyProfiles();
-  }, [id, router]);
-
-  const loadProfile = async () => {
-    try {
-      setLoading(true);
-      const response = await profileApi.get(id);
-      if (response.success && response.data) {
-        setProfile(response.data.profile);
-      }
-    } catch (error) {
-      console.error("Failed to load profile:", error);
-      router.push("/home");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadUser = async () => {
-    const token = getToken();
-    if (!token) return;
-
-    try {
-      const response = await authApi.me();
-      if (response.success && response.data) {
-        setUser(response.data.user);
-      }
-    } catch (error) {
-      console.error("Failed to load user:", error);
-    }
-  };
-
-  const loadMyProfiles = async () => {
-    try {
-      const response = await myApi.profiles();
-      if (response.success && response.data) {
-        setMyProfiles(response.data.profiles);
-      }
-    } catch (error) {
-      console.error("Failed to load my profiles:", error);
-    }
-  };
+  }, [router]);
 
   const handleRequest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,24 +49,20 @@ export default function ProfileDetailPage() {
       return;
     }
 
-    setRequesting(true);
-
     try {
-      const response = await matchApi.request(selectedProfileId, id, message || undefined);
-      if (response.success) {
-        setShowRequestForm(false);
-        setMessage("");
-        setSelectedProfileId("");
-        setRequestStep("select");
-        alert("매칭 신청이 완료되었습니다!");
-        router.push("/home");
-      } else {
-        setError(response.error?.message || "매칭 신청에 실패했습니다.");
-      }
-    } catch (error) {
-      setError("서버 오류가 발생했습니다.");
-    } finally {
-      setRequesting(false);
+      await requestMatchMutation.mutateAsync({
+        requesterProfileId: selectedProfileId,
+        targetProfileId: id,
+        message: message || undefined,
+      });
+      setShowRequestForm(false);
+      setMessage("");
+      setSelectedProfileId("");
+      setRequestStep("select");
+      alert("매칭 신청이 완료되었습니다!");
+      router.push("/home");
+    } catch (error: any) {
+      setError(error.message || "매칭 신청에 실패했습니다.");
     }
   };
 
@@ -113,24 +71,17 @@ export default function ProfileDetailPage() {
       return;
     }
 
-    setDeleting(true);
     try {
-      const response = await profileApi.delete(id);
-      if (response.success) {
-        alert("프로필이 삭제되었습니다.");
-        router.push("/home");
-      } else {
-        alert(response.error?.message || "삭제에 실패했습니다.");
-      }
-    } catch (error) {
-      alert("서버 오류가 발생했습니다.");
-    } finally {
-      setDeleting(false);
+      await deleteProfileMutation.mutateAsync(id);
+      alert("프로필이 삭제되었습니다.");
+      router.push("/home");
+    } catch (error: any) {
+      alert(error.message || "삭제에 실패했습니다.");
     }
   };
 
   const handleDownloadImage = async () => {
-    if (!profileCardRef.current) return;
+    if (!profileCardRef.current || !profile) return;
 
     setDownloading(true);
     try {
@@ -151,7 +102,7 @@ export default function ProfileDetailPage() {
     }
   };
 
-  if (loading) {
+  if (profileLoading) {
     return (
       <div className="min-h-screen bg-[#FAF8F3] flex items-center justify-center">
         <p className="text-[#A08060]">로딩 중...</p>
@@ -202,7 +153,10 @@ export default function ProfileDetailPage() {
           </button>
         </div>
 
-        <div ref={profileCardRef} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-[#E8DDD4]">
+        <div
+          ref={profileCardRef}
+          className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-[#E8DDD4]"
+        >
           {/* 캐릭터 & 닉네임 */}
           <div className="flex items-center gap-4 mb-6">
             <div className="w-20 h-20 rounded-2xl bg-[#F5EDE5] flex items-center justify-center flex-shrink-0">
@@ -225,16 +179,12 @@ export default function ProfileDetailPage() {
                 )}
               </div>
               <p className="text-sm text-[#A08060] mt-1">
-                {[
-                  profile.birthYear && `${profile.birthYear}년생`,
-                  profile.location,
-                  profile.job
-                ].filter(Boolean).join(" · ")}
+                {[profile.birthYear && `${profile.birthYear}년생`, profile.location, profile.job]
+                  .filter(Boolean)
+                  .join(" · ")}
               </p>
               {profile.registeredBy && (
-                <p className="text-xs text-[#C4956A] mt-1">
-                  {profile.registeredBy.nickname}님이 소개한 친구
-                </p>
+                <p className="text-xs text-[#C4956A] mt-1">{profile.registeredBy.nickname}님이 소개한 친구</p>
               )}
             </div>
           </div>
@@ -242,9 +192,7 @@ export default function ProfileDetailPage() {
           {/* 기본 정보 */}
           <div className="space-y-6">
             <div className="space-y-4">
-              <h2 className="text-base font-semibold text-[#5C4A37] border-b border-[#E8DDD4] pb-2">
-                기본 정보
-              </h2>
+              <h2 className="text-base font-semibold text-[#5C4A37] border-b border-[#E8DDD4] pb-2">기본 정보</h2>
               <div className="grid grid-cols-2 gap-4">
                 {profile.gender && (
                   <div>
@@ -284,9 +232,7 @@ export default function ProfileDetailPage() {
             {/* 친구 소개 */}
             {profile.bio && (
               <div className="space-y-4">
-                <h2 className="text-base font-semibold text-[#5C4A37] border-b border-[#E8DDD4] pb-2">
-                  친구 소개
-                </h2>
+                <h2 className="text-base font-semibold text-[#5C4A37] border-b border-[#E8DDD4] pb-2">친구 소개</h2>
                 <p className="text-[#5C4A37] whitespace-pre-wrap leading-relaxed">{profile.bio}</p>
               </div>
             )}
@@ -326,9 +272,7 @@ export default function ProfileDetailPage() {
             {/* 관심사 */}
             {profile.interests && profile.interests.length > 0 && (
               <div className="space-y-4">
-                <h2 className="text-base font-semibold text-[#5C4A37] border-b border-[#E8DDD4] pb-2">
-                  관심사
-                </h2>
+                <h2 className="text-base font-semibold text-[#5C4A37] border-b border-[#E8DDD4] pb-2">관심사</h2>
                 <div className="flex flex-wrap gap-2">
                   {profile.interests.map((interest: string, idx: number) => (
                     <span key={idx} className="px-3 py-2 bg-[#C4956A] text-white text-sm rounded-full">
@@ -342,9 +286,7 @@ export default function ProfileDetailPage() {
             {/* 연애 스타일 */}
             {profile.datingStyles && profile.datingStyles.length > 0 && (
               <div className="space-y-4">
-                <h2 className="text-base font-semibold text-[#5C4A37] border-b border-[#E8DDD4] pb-2">
-                  연애 스타일
-                </h2>
+                <h2 className="text-base font-semibold text-[#5C4A37] border-b border-[#E8DDD4] pb-2">연애 스타일</h2>
                 <div className="flex flex-wrap gap-2">
                   {profile.datingStyles.map((style: string, idx: number) => (
                     <span key={idx} className="px-3 py-2 bg-[#C4956A] text-white text-sm rounded-full">
@@ -358,9 +300,7 @@ export default function ProfileDetailPage() {
             {/* 연락 스타일 */}
             {profile.contactStyles && profile.contactStyles.length > 0 && (
               <div className="space-y-4">
-                <h2 className="text-base font-semibold text-[#5C4A37] border-b border-[#E8DDD4] pb-2">
-                  연락 스타일
-                </h2>
+                <h2 className="text-base font-semibold text-[#5C4A37] border-b border-[#E8DDD4] pb-2">연락 스타일</h2>
                 <div className="flex flex-wrap gap-2">
                   {profile.contactStyles.map((style: string, idx: number) => (
                     <span key={idx} className="px-3 py-2 bg-[#C4956A] text-white text-sm rounded-full">
@@ -374,9 +314,7 @@ export default function ProfileDetailPage() {
             {/* 연락 선호 방식 */}
             {profile.contactPreference && (
               <div className="space-y-4">
-                <h2 className="text-base font-semibold text-[#5C4A37] border-b border-[#E8DDD4] pb-2">
-                  연락 선호 방식
-                </h2>
+                <h2 className="text-base font-semibold text-[#5C4A37] border-b border-[#E8DDD4] pb-2">연락 선호 방식</h2>
                 <span className="px-3 py-2 bg-[#C4956A] text-white text-sm rounded-full">
                   {profile.contactPreference}
                 </span>
@@ -406,9 +344,7 @@ export default function ProfileDetailPage() {
                   <div className="space-y-4">
                     {requestStep === "select" ? (
                       <>
-                        <p className="text-sm font-medium text-[#5C4A37]">
-                          어떤 친구로 신청할까요?
-                        </p>
+                        <p className="text-sm font-medium text-[#5C4A37]">어떤 친구로 신청할까요?</p>
                         <div className="space-y-2">
                           {myProfiles.map((p) => {
                             const CharIcon = getCharacterIcon(p.character);
@@ -460,9 +396,7 @@ export default function ProfileDetailPage() {
                           </p>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-[#8B7355] mb-1">
-                            메시지 (선택)
-                          </label>
+                          <label className="block text-sm font-medium text-[#8B7355] mb-1">메시지 (선택)</label>
                           <textarea
                             value={message}
                             onChange={(e) => setMessage(e.target.value)}
@@ -475,10 +409,10 @@ export default function ProfileDetailPage() {
                         <div className="flex gap-2">
                           <button
                             type="submit"
-                            disabled={requesting}
+                            disabled={requestMatchMutation.isPending}
                             className="flex-1 px-6 py-3 rounded-xl text-white bg-gradient-to-r from-[#C4956A] to-[#B8A080] font-medium shadow-md disabled:opacity-50 active:scale-[0.97] transition-all"
                           >
-                            {requesting ? "신청 중..." : "신청하기"}
+                            {requestMatchMutation.isPending ? "신청 중..." : "신청하기"}
                           </button>
                           <button
                             type="button"
@@ -512,10 +446,10 @@ export default function ProfileDetailPage() {
             {canDelete && (
               <button
                 onClick={handleDelete}
-                disabled={deleting}
+                disabled={deleteProfileMutation.isPending}
                 className="w-full px-6 py-3 rounded-xl text-red-500 bg-red-50 border border-red-200 font-medium active:scale-[0.97] transition-all disabled:opacity-50"
               >
-                {deleting ? "삭제 중..." : "프로필 삭제"}
+                {deleteProfileMutation.isPending ? "삭제 중..." : "프로필 삭제"}
               </button>
             )}
           </div>
