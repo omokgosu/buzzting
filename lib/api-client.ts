@@ -107,7 +107,7 @@ export const matchApi = {
     );
   },
   accept: async (id: string) => {
-    return apiRequest<{ matchRequest: any; match: any }>(`/match-requests/${id}/accept`, {
+    return apiRequest<{ matchRequest: any; match: any; requesterProfile: any; targetProfile: any }>(`/match-requests/${id}/accept`, {
       method: "POST",
     });
   },
