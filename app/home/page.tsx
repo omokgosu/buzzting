@@ -59,12 +59,14 @@ export default function Home() {
               {user ? (
                 <>
                   <span className="text-[#5C4A37] font-medium">{user.nickname}</span>
-                  <Link
-                    href="/mypage"
-                    className="px-3 py-1.5 rounded-lg bg-[#F5EDE5] text-[#8B7355] font-medium active:scale-[0.97] transition-all"
-                  >
-                    마이페이지
-                  </Link>
+                  {!user.isGuest && (
+                    <Link
+                      href="/mypage"
+                      className="px-3 py-1.5 rounded-lg bg-[#F5EDE5] text-[#8B7355] font-medium active:scale-[0.97] transition-all"
+                    >
+                      마이페이지
+                    </Link>
+                  )}
                   <button
                     onClick={handleLogout}
                     className="text-[#A08060] active:text-[#8B7355] transition-colors"
@@ -188,17 +190,19 @@ export default function Home() {
         )}
       </main>
 
-      {/* 프로필 등록 플로팅 버튼 */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[500px] px-4 pointer-events-none">
-        <div className="flex justify-end pointer-events-auto">
-          <Link
-            href="/profiles/new"
-            className="px-4 py-2.5 bg-[#C4956A] text-white text-sm font-medium rounded-full shadow-lg active:scale-95 transition-all"
-          >
-            + 프로필 등록
-          </Link>
+      {/* 프로필 등록 플로팅 버튼 - guest가 아닌 경우에만 표시 */}
+      {user && !user.isGuest && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[500px] px-4 pointer-events-none">
+          <div className="flex justify-end pointer-events-auto">
+            <Link
+              href="/profiles/new"
+              className="px-4 py-2.5 bg-[#C4956A] text-white text-sm font-medium rounded-full shadow-lg active:scale-95 transition-all"
+            >
+              + 프로필 등록
+            </Link>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
