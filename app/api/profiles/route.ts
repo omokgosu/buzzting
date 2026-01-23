@@ -126,18 +126,6 @@ export async function POST(request: NextRequest) {
       // TODO: 친구 대신 등록하는 경우 추가 로직 구현
     }
 
-    // 활성 프로필 존재 확인 (한 사용자당 하나의 활성 프로필만 허용)
-    const existingProfile = await prisma.profile.findFirst({
-      where: {
-        userId,
-        isActive: true,
-      },
-    });
-
-    if (existingProfile) {
-      return errorResponse("ALREADY_HAS_ACTIVE_PROFILE", "이미 활성 프로필이 존재합니다.", 400);
-    }
-
     // 프로필 생성
     const profile = await prisma.profile.create({
       data: {
