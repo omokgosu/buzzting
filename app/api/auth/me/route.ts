@@ -11,6 +11,18 @@ export async function GET(request: NextRequest) {
       return errorResponse("UNAUTHORIZED", "인증이 필요합니다.", 401);
     }
 
+    // guest 사용자인 경우 DB 조회 없이 직접 반환
+    if (payload.isGuest) {
+      return successResponse({
+        user: {
+          id: "guest",
+          email: "guest@buzzting.com",
+          nickname: "게스트",
+          isGuest: true,
+        },
+      });
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
       select: {
