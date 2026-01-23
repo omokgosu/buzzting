@@ -324,7 +324,7 @@ export default function ProfileDetailPage() {
 
           {/* 매칭 신청 / 수정 / 삭제 버튼 */}
           <div className="mt-8 space-y-3">
-            {!canEdit && user && (
+            {!canEdit && user && !user.isGuest && (
               <>
                 {!showRequestForm ? (
                   <button
