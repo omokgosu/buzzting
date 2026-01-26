@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import { profileApi, authApi } from "@/lib/api-client";
 import { getToken } from "@/lib/auth-client";
 import { CHARACTERS } from "@/components/CharacterIcons";
+import { queryKeys } from "@/hooks/use-api";
 
 // 선택 옵션들
 const IDEAL_TYPES = [
@@ -64,6 +66,7 @@ const DRINKING_OPTIONS = ["안 마심", "월 1-2회", "주 1-2회", "주 3회 �
 export default function EditProfilePage() {
   const router = useRouter();
   const params = useParams();
+  const queryClient = useQueryClient();
   const id = params.id as string;
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -193,6 +196,10 @@ export default function EditProfilePage() {
       });
 
       if (response.success) {
+        // 캐시 무효화
+        queryClient.invalidateQueries({ queryKey: queryKeys.profile(id) });
+        queryClient.invalidateQueries({ queryKey: ["profiles"] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.myProfiles });
         router.push(`/profile/${id}`);
       } else {
         setError(response.error?.message || "프로필 수정에 실패했습니다.");

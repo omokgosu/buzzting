@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import { profileApi, authApi } from "@/lib/api-client";
 import { getToken } from "@/lib/auth-client";
 import { CHARACTERS } from "@/components/CharacterIcons";
+import { queryKeys } from "@/hooks/use-api";
 
 // 선택 옵션들
 const IDEAL_TYPES = [
@@ -63,6 +65,7 @@ const DRINKING_OPTIONS = ["안 마심", "월 1-2회", "주 1-2회", "주 3회 �
 
 export default function NewProfilePage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -162,6 +165,9 @@ export default function NewProfilePage() {
       });
 
       if (response.success) {
+        // 캐시 무효화
+        queryClient.invalidateQueries({ queryKey: ["profiles"] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.myProfiles });
         router.push(`/profile/${response.data?.profile.id}`);
       } else {
         setError(response.error?.message || "프로필 등록에 실패했습니다.");
