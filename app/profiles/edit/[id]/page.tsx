@@ -90,6 +90,7 @@ export default function EditProfilePage() {
     datingStyles: [] as string[],
     contactStyles: [] as string[],
     contactPreference: "" as string,
+    instagramUrl: "",
   });
 
   useEffect(() => {
@@ -137,6 +138,7 @@ export default function EditProfilePage() {
           datingStyles: profile.datingStyles || [],
           contactStyles: profile.contactStyles || [],
           contactPreference: profile.contactPreference || "",
+          instagramUrl: profile.instagramUrl || "",
         });
       }
     } catch (error) {
@@ -193,6 +195,7 @@ export default function EditProfilePage() {
         datingStyles: formData.datingStyles,
         contactStyles: formData.contactStyles,
         contactPreference: formData.contactPreference || undefined,
+        instagramUrl: formData.instagramUrl || undefined,
       });
 
       if (response.success) {
@@ -596,6 +599,26 @@ export default function EditProfilePage() {
                     {opt}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* 인스타그램 */}
+            <div className="space-y-4">
+              <h2 className="text-base font-semibold text-[#5C4A37] border-b border-[#E8DDD4] pb-2">
+                인스타그램
+              </h2>
+              <div>
+                <label className="block text-sm font-medium text-[#8B7355] mb-1">
+                  인스타그램 URL (선택)
+                </label>
+                <input
+                  type="url"
+                  className="w-full px-4 py-3 border border-[#E0D4C8] rounded-xl bg-white/90 focus:outline-none focus:ring-2 focus:ring-[#C4956A] focus:border-[#C4956A] text-[#5C4A37] placeholder:text-[#B8A090]"
+                  value={formData.instagramUrl}
+                  onChange={(e) => setFormData({ ...formData, instagramUrl: e.target.value })}
+                  placeholder="https://instagram.com/username"
+                />
+                <p className="text-xs text-[#A08060] mt-1">인스타그램 프로필 링크를 입력해주세요</p>
               </div>
             </div>
 

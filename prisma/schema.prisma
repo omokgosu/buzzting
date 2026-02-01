@@ -84,6 +84,7 @@ model Profile {
   contactStyles String[] @default([]) @map("contact_styles") // 연락 스타일
 
   contactPreference String? @map("contact_preference") // 카카오톡/전화/인스타DM/직접만남
+  instagramUrl      String? @map("instagram_url") // 인스타그램 URL
   isActive          Boolean            @default(true) @map("is_active")
   createdAt         DateTime           @default(now()) @map("created_at")
   updatedAt         DateTime           @updatedAt @map("updated_at")
