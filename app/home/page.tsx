@@ -123,66 +123,66 @@ export default function Home() {
             <p className="text-[#A08060]">등록된 프로필이 없습니다.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             {profiles.map((profile) => (
               <Link
                 key={profile.id}
                 href={`/profile/${profile.id}`}
-                className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md border border-[#E8DDD4] p-4 active:scale-[0.98] transition-all"
+                className="group bg-white rounded-2xl shadow-sm border border-[#E8DDD4] overflow-hidden active:scale-[0.98] transition-all hover:shadow-md"
                 onMouseEnter={() => prefetchProfile(profile.id)}
                 onTouchStart={() => prefetchProfile(profile.id)}
               >
-                <div className="flex gap-4">
-                  {/* 프로필 아바타 */}
-                  <div className="w-16 h-16 rounded-full bg-[#F5EDE5] flex items-center justify-center border-2 border-[#E8DDD4] flex-shrink-0">
+                {/* 캐릭터 영역 */}
+                <div className="bg-gradient-to-b from-[#FDFBF8] to-[#F8F4EF] pt-6 pb-4 flex justify-center">
+                  <div className="w-20 h-20 rounded-full bg-white shadow-sm flex items-center justify-center">
                     {(() => {
                       const CharIcon = getCharacterIcon(profile.character);
                       return CharIcon ? (
-                        <CharIcon size={44} />
+                        <CharIcon size={52} />
                       ) : (
                         <span className="text-2xl text-[#C4956A]">{profile.nickname?.charAt(0) || "?"}</span>
                       );
                     })()}
                   </div>
+                </div>
 
-                  {/* 프로필 정보 */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h2 className="text-lg font-bold text-[#5C4A37]">{profile.nickname}</h2>
-                      {profile.gender && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-[#F5EDE5] text-[#8B7355]">
-                          {profile.gender === "male" ? "남" : "여"}
-                        </span>
-                      )}
-                      {profile.mbti && (
-                        <span className="text-xs px-2 py-0.5 bg-[#F5EDE5] text-[#C4956A] rounded-full">
-                          {profile.mbti}
-                        </span>
-                      )}
-                    </div>
+                {/* 정보 영역 */}
+                <div className="p-4">
+                  {/* 닉네임 & 년생 */}
+                  <div className="text-center mb-3">
+                    <h2 className="text-base font-bold text-[#5C4A37]">{profile.nickname}</h2>
+                    <p className="text-sm text-[#8B7355] mt-0.5">
+                      {profile.birthYear ? `${profile.birthYear}년생` : ""}
+                      {profile.birthYear && profile.gender && " · "}
+                      {profile.gender === "male" ? "남자" : profile.gender === "female" ? "여자" : ""}
+                    </p>
+                  </div>
 
-                    <div className="flex gap-2 text-xs text-[#8B7355] mb-2">
-                      {profile.birthYear && <span>{profile.birthYear}년생</span>}
-                      {profile.height && <span>· {profile.height}cm</span>}
-                      {profile.location && <span>· {profile.location}</span>}
-                      {profile.job && <span>· {profile.job}</span>}
-                    </div>
-
-                    {profile.bio && <p className="text-xs text-[#8B7355] line-clamp-2 mb-2">{profile.bio}</p>}
-
-                    {profile.interests && profile.interests.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {profile.interests.slice(0, 4).map((interest: string, idx: number) => (
-                          <span key={idx} className="px-2 py-0.5 bg-[#F5EDE5] text-[#C4956A] text-xs rounded-full">
-                            {interest}
-                          </span>
-                        ))}
-                        {profile.interests.length > 4 && (
-                          <span className="px-2 py-0.5 text-[#A08060] text-xs">+{profile.interests.length - 4}</span>
-                        )}
-                      </div>
+                  {/* 직장 | MBTI | 키 */}
+                  <div className="flex justify-center gap-1 flex-wrap mb-3">
+                    {profile.job && (
+                      <span className="text-[11px] px-2.5 py-1 rounded-full bg-[#F5EDE5] text-[#8B7355]">
+                        {profile.job}
+                      </span>
+                    )}
+                    {profile.mbti && (
+                      <span className="text-[11px] px-2.5 py-1 rounded-full bg-[#C4956A]/10 text-[#C4956A] font-medium">
+                        {profile.mbti}
+                      </span>
+                    )}
+                    {profile.height && (
+                      <span className="text-[11px] px-2.5 py-1 rounded-full bg-[#F5EDE5] text-[#8B7355]">
+                        {profile.height}cm
+                      </span>
                     )}
                   </div>
+
+                  {/* 친구 소개 */}
+                  {profile.bio && (
+                    <p className="text-xs text-[#A08060] text-center line-clamp-2 leading-relaxed">
+                      "{profile.bio}"
+                    </p>
+                  )}
                 </div>
               </Link>
             ))}

@@ -35,6 +35,7 @@ export async function GET(
         datingStyles: true,
         contactStyles: true,
         contactPreference: true,
+        instagramUrl: true,
         isActive: true,
         createdAt: true,
         updatedAt: true,
@@ -106,6 +107,7 @@ export async function PUT(
       datingStyles,
       contactStyles,
       contactPreference,
+      instagramUrl,
     } = body;
 
     const updatedProfile = await prisma.profile.update({
@@ -128,6 +130,7 @@ export async function PUT(
         ...(datingStyles !== undefined && { datingStyles }),
         ...(contactStyles !== undefined && { contactStyles }),
         ...(contactPreference !== undefined && { contactPreference }),
+        ...(instagramUrl !== undefined && { instagramUrl }),
       },
     });
 

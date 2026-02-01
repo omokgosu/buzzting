@@ -104,6 +104,7 @@ export async function POST(request: NextRequest) {
       datingStyles,
       contactStyles,
       contactPreference,
+      instagramUrl,
     } = body;
 
     // 입력 검증
@@ -148,6 +149,7 @@ export async function POST(request: NextRequest) {
         datingStyles: datingStyles || [],
         contactStyles: contactStyles || [],
         contactPreference: contactPreference || null,
+        instagramUrl: instagramUrl || null,
       },
     });
 
