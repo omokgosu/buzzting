@@ -195,7 +195,7 @@ export default function EditProfilePage() {
         datingStyles: formData.datingStyles,
         contactStyles: formData.contactStyles,
         contactPreference: formData.contactPreference || undefined,
-        instagramUrl: formData.instagramUrl || undefined,
+        instagramUrl: formData.instagramUrl === "" ? null : formData.instagramUrl,
       });
 
       if (response.success) {
