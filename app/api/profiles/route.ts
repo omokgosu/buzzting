@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
           dateStyles: true,
           datingStyles: true,
           contactStyles: true,
+          instagramUrl: true,
           createdAt: true,
         },
       }),

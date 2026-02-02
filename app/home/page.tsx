@@ -128,7 +128,11 @@ export default function Home() {
               <Link
                 key={profile.id}
                 href={`/profile/${profile.id}`}
-                className="group bg-white rounded-2xl shadow-sm border border-[#E8DDD4] overflow-hidden active:scale-[0.98] transition-all hover:shadow-md"
+                className={`group bg-white rounded-2xl shadow-sm border overflow-hidden active:scale-[0.98] transition-all hover:shadow-md ${
+                  profile.instagramUrl
+                    ? "border-pink-400 border-[1.5px]"
+                    : "border-[#E8DDD4]"
+                }`}
                 onMouseEnter={() => prefetchProfile(profile.id)}
                 onTouchStart={() => prefetchProfile(profile.id)}
               >
